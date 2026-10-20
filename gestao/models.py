@@ -18,6 +18,7 @@ class Ingrediente(models.Model):
 class Produto(models.Model):
     nome=models.CharField(max_length=120); descricao=models.TextField(blank=True)
     preco=models.DecimalField(max_digits=10,decimal_places=2); ativo=models.BooleanField(default=True)
+    imagem_url=models.URLField('URL da imagem', max_length=500, blank=True, help_text='Opcional: cole o link público de uma foto do doce')
     ingredientes=models.ManyToManyField(Ingrediente,through='Receita',blank=True)
     def __str__(self): return self.nome
     def custo(self): return sum((r.quantidade*r.ingrediente.custo_unitario for r in self.receitas.select_related('ingrediente')),Decimal('0'))
