@@ -1,0 +1,29 @@
+{% extends "gestao/base.html" %}
+{% block titulo %}Produção{% endblock %}
+{% block conteudo %}
+<h1>Ordem de produção</h1>
+
+{% if compras %}
+<h2>Lista de compras</h2>
+<p class="suave">O que falta no estoque para os pedidos confirmados:</p>
+<div class="rolagem"><table><tr><th>Ingrediente</th><th>Falta</th></tr>
+{% for ing, falta in compras %}<tr><td>{{ ing.nome }}</td><td>{{ falta }} {{ ing.unidade }}</td></tr>{% endfor %}</table></div>
+{% endif %}
+
+<h2>Pedidos por data de entrega</h2>
+{% for p in pedidos %}
+<div class="cartao">
+  <strong>{{ p.data_entrega|date:"d/m/Y" }}</strong> - {{ p.cliente }} ({{ p.telefone }})<br>
+  <span class="suave">{{ p.get_status_display }} · {{ p.get_entrega_display }} · {{ p.get_origem_display }}</span>
+  <ul>{% for i in p.itens.all %}<li>{{ i.quantidade }}x {{ i.produto.nome }}</li>{% endfor %}</ul>
+  {% if p.observacoes %}<p class="suave">{{ p.observacoes }}</p>{% endif %}
+  <strong>Total: R$ {{ p.total|floatformat:2 }}</strong>
+  <div class="acoes">
+    {% if p.status == "novo" %}<form method="post">{% csrf_token %}<input type="hidden" name="pedido" value="{{ p.id }}"><button name="acao" value="confirmar">Confirmar pedido</button></form>{% endif %}
+    {% if p.status == "confirmado" %}<form method="post">{% csrf_token %}<input type="hidden" name="pedido" value="{{ p.id }}"><button name="acao" value="produzir">Marcar como produzido</button></form>{% endif %}
+    {% if p.status == "produzido" %}<form method="post">{% csrf_token %}<input type="hidden" name="pedido" value="{{ p.id }}"><button name="acao" value="entregar" class="sec">Marcar como entregue</button></form>{% endif %}
+    {% if p.status == "novo" or p.status == "confirmado" %}<form method="post">{% csrf_token %}<input type="hidden" name="pedido" value="{{ p.id }}"><button name="acao" value="cancelar" class="perigo">Cancelar</button></form>{% endif %}
+  </div>
+</div>
+{% empty %}<p class="suave">Nenhum pedido em andamento.</p>{% endfor %}
+{% endblock %}

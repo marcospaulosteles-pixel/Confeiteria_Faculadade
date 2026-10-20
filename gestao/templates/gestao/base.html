@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block titulo %}Doces feitos com amor{% endblock %}</title>
+<style>
+  :root { --fundo:#fff6f7; --tinta:#2b1620; --maca:#a4163a; --pistache:#dce8d2; --linha:#e9cfd5; --suave:#6e5560; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--fundo); color:var(--tinta); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  h1,h2,h3 { font-family:Georgia,"Times New Roman",serif; font-weight:700; line-height:1.15; margin:0 0 .5em; }
+  h1 { font-size:clamp(2rem,6vw,3.2rem); color:var(--maca); }
+  main { max-width:760px; margin:0 auto; padding:24px 18px 64px; }
+  .topo { background:var(--tinta); color:#fff; padding:10px 18px; display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
+  .topo a { color:#fff; text-decoration:none; } .topo a:hover, .topo a:focus { text-decoration:underline; }
+  .topo strong { margin-right:auto; font-family:Georgia,serif; font-size:1.1rem; }
+  a { color:var(--maca); }
+  label { display:block; font-weight:600; margin:14px 0 4px; }
+  input,select,textarea { width:100%; padding:10px; border:1px solid var(--linha); border-radius:6px; font:inherit; background:#fff; }
+  input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible { outline:3px solid var(--maca); outline-offset:2px; }
+  button,.botao { background:var(--maca); color:#fff; border:0; padding:12px 22px; border-radius:6px; font:inherit; font-weight:700; cursor:pointer; }
+  button.sec { background:var(--pistache); color:var(--tinta); }
+  button.perigo { background:#fff; color:var(--maca); border:1px solid var(--maca); }
+  .doce { display:grid; grid-template-columns:1fr 84px; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid var(--linha); }
+  .doce small, .suave { color:var(--suave); }
+  .preco { color:var(--maca); font-weight:700; }
+  .erro { color:#8a1020; font-size:.9rem; margin:4px 0 0; padding:0; list-style:none; }
+  .aviso { background:var(--pistache); padding:12px 14px; border-radius:6px; margin:16px 0; }
+  .alerta { background:#ffe3e8; padding:12px 14px; border-radius:6px; margin:12px 0; }
+  table { width:100%; border-collapse:collapse; margin:8px 0 24px; }
+  th,td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--linha); }
+  .rolagem { overflow-x:auto; }
+  .cartao { border:1px solid var(--linha); border-radius:8px; padding:14px; margin:14px 0; background:#fff; }
+  .acoes { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .acoes form { margin:0; }
+  .numeros { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+  .numeros div { background:#fff; border:1px solid var(--linha); border-radius:8px; padding:12px; }
+  .numeros b { display:block; font-size:1.4rem; font-family:Georgia,serif; }
+</style>
+</head>
+<body>
+{% if user.is_staff %}
+<nav class="topo" aria-label="Gestão">
+  <strong>Gestão</strong>
+  <a href="/painel/">Painel</a><a href="/producao/">Produção</a><a href="/admin/">Cadastros</a><a href="/">Ver site</a>
+</nav>
+{% endif %}
+<main>
+{% for m in messages %}<div class="{% if m.tags == 'error' %}alerta{% else %}aviso{% endif %}" role="status">{{ m }}</div>{% endfor %}
+{% block conteudo %}{% endblock %}
+</main>
+</body>
+</html>

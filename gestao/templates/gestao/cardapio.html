@@ -1,0 +1,26 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<h1>Doces feitos como os de família</h1>
+<p>Escolha os doces, informe a data e a gente confirma pelo WhatsApp.</p>
+<p class="aviso">Encomendas com <strong>{{ dias }} dias de antecedência</strong>, para ingredientes frescos e capricho em cada detalhe.</p>
+
+<form method="post">{% csrf_token %}
+  {% if form.non_field_errors %}<ul class="erro">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  <h2>Cardápio</h2>
+  {% for p in produtos %}
+  <div class="doce">
+    <div><strong>{{ p.nome }}</strong> <span class="preco">R$ {{ p.preco|floatformat:2 }}</span><br><small>{{ p.descricao }}</small></div>
+    <div><label for="qtd_{{ p.id }}" class="suave" style="margin:0">Qtd.</label>
+      <input id="qtd_{{ p.id }}" name="qtd_{{ p.id }}" type="number" min="0" value="0"></div>
+  </div>
+  {% empty %}<p class="suave">O cardápio está sendo atualizado.</p>{% endfor %}
+
+  <h2 style="margin-top:28px">Seus dados</h2>
+  {% for campo in form %}
+    <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+    {{ campo }}
+    {% if campo.errors %}<ul class="erro">{% for e in campo.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  {% endfor %}
+  <p><button type="submit">Enviar pedido</button></p>
+</form>
+{% endblock %}

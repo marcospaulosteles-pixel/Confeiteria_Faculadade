@@ -1,0 +1,31 @@
+{% extends "gestao/base.html" %}
+{% block titulo %}Painel{% endblock %}
+{% block conteudo %}
+<h1>Painel de {{ mes }}</h1>
+{% if novos %}<p class="aviso"><a href="/producao/">{{ novos }} pedido{{ novos|pluralize }} novo{{ novos|pluralize }} aguardando confirmação</a></p>{% endif %}
+
+<h2>Financeiro do mês</h2>
+<div class="numeros">
+  <div>Receita<b>R$ {{ fin.receita|floatformat:2 }}</b></div>
+  <div>Custo dos ingredientes<b>R$ {{ fin.custo|floatformat:2 }}</b></div>
+  <div>Outras despesas<b>R$ {{ fin.despesas|floatformat:2 }}</b></div>
+  <div>Lucro<b>R$ {{ fin.lucro|floatformat:2 }}</b></div>
+</div>
+<p class="suave">Considera {{ fin.qtd_pedidos }} pedido{{ fin.qtd_pedidos|pluralize }} produzido{{ fin.qtd_pedidos|pluralize }} ou entregue{{ fin.qtd_pedidos|pluralize }} com entrega neste mês. Cadastre gás, embalagens e taxas em Cadastros &gt; Despesas.</p>
+
+<h2>Alertas</h2>
+{% for i in vencendo %}<div class="alerta">Vence em breve: <strong>{{ i.nome }}</strong> ({{ i.validade|date:"d/m/Y" }})</div>{% endfor %}
+{% for i in baixos %}<div class="alerta">Estoque baixo: <strong>{{ i.nome }}</strong> ({{ i.quantidade }} {{ i.unidade }})</div>{% endfor %}
+{% if not vencendo and not baixos %}<p class="suave">Nenhum ingrediente vencendo ou acabando.</p>{% endif %}
+
+<h2>Demanda por mês</h2>
+{% for mes, itens in demanda %}
+  <h3>{{ mes|date:"F/Y" }}</h3>
+  <div class="rolagem"><table><tr><th>Doce</th><th>Quantidade pedida</th></tr>
+  {% for nome, qtd in itens %}<tr><td>{{ nome }}</td><td>{{ qtd }}</td></tr>{% endfor %}</table></div>
+{% empty %}<p class="suave">Ainda não há pedidos para analisar.</p>{% endfor %}
+
+<h2>Margem por doce</h2>
+<div class="rolagem"><table><tr><th>Doce</th><th>Preço</th><th>Custo</th><th>Margem</th></tr>
+{% for p, custo, margem in produtos %}<tr><td>{{ p.nome }}</td><td>R$ {{ p.preco|floatformat:2 }}</td><td>R$ {{ custo|floatformat:2 }}</td><td>R$ {{ margem|floatformat:2 }}</td></tr>{% endfor %}</table></div>
+{% endblock %}
