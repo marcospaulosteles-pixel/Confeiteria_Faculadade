@@ -51,3 +51,11 @@ class ItemPedido(models.Model):
 class Despesa(models.Model):
     descricao=models.CharField(max_length=150); valor=models.DecimalField(max_digits=10,decimal_places=2); data=models.DateField()
     def __str__(self): return self.descricao
+
+class Compra(models.Model):
+    ingrediente=models.ForeignKey(Ingrediente,on_delete=models.PROTECT,related_name='compras')
+    quantidade=models.DecimalField(max_digits=10,decimal_places=2,help_text='Quantidade comprada na unidade de estoque do ingrediente')
+    valor_total=models.DecimalField(max_digits=10,decimal_places=2)
+    data=models.DateField(auto_now_add=True)
+    criado_em=models.DateTimeField(auto_now_add=True)
+    def __str__(self): return f'{self.ingrediente} - {self.quantidade} {self.ingrediente.unidade}'

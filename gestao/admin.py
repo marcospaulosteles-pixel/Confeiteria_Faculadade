@@ -7,3 +7,7 @@ class ItemInline(admin.TabularInline): model=ItemPedido; extra=0
 @admin.register(Pedido)
 class PedidoAdmin(admin.ModelAdmin): list_display=('id','cliente','data_entrega','status','origem'); list_filter=('status','origem'); inlines=[ItemInline]
 admin.site.register(Ingrediente); admin.site.register(Despesa)
+from .models import Compra
+@admin.register(Compra)
+class CompraAdmin(admin.ModelAdmin):
+    list_display=('ingrediente','quantidade','valor_total','data')

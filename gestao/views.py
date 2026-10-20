@@ -107,3 +107,75 @@ def bot_webhook(request):
                              dias_antecedencia=settings.ANTECEDENCIA_MINIMA_DIAS,
                              link_pedido=request.build_absolute_uri("/"), nome_loja=settings.NOME_LOJA)
     return JsonResponse({"resposta": resposta})
+from decimal import Decimal
+from django.db.models import Sum
+from .forms import IngredienteForm, CompraForm, ProdutoRapidoForm, DespesaForm
+from .models import Compra, Despesa, Receita
+
+@staff_member_required
+def central(request):
+    hoje=date.today()
+    proximos=list(Pedido.objects.filter(data_entrega__gte=hoje,status__in=['novo','confirmado','produzido']).prefetch_related('itens__produto').order_by('data_entrega')[:12])
+    ingredientes=list(Ingrediente.objects.all().order_by('nome'))
+    fin=services.resumo_financeiro(hoje.year,hoje.month)
+    confirmados=list(Pedido.objects.filter(status='confirmado').prefetch_related('itens__produto__receitas__ingrediente'))
+    return render(request,'gestao/central.html',{'hoje':hoje,'proximos':proximos,'novos':Pedido.objects.filter(status='novo').count(),'confirmados':len(confirmados),'baixos':[i for i in ingredientes if i.estoque_baixo()],'vencendo':[i for i in ingredientes if i.vencendo()],'fin':fin,'compras':services.lista_de_compras(confirmados)})
+
+@staff_member_required
+def estoque(request):
+    return render(request,'gestao/estoque.html',{'ingredientes':Ingrediente.objects.all().order_by('nome')})
+
+@staff_member_required
+def novo_ingrediente(request):
+    form=IngredienteForm(request.POST or None)
+    if request.method=='POST' and form.is_valid():
+        form.save(); messages.success(request,'Ingrediente cadastrado. Agora ele já pode ser usado nas receitas.'); return redirect('estoque')
+    return render(request,'gestao/form_simples.html',{'form':form,'titulo':'Novo ingrediente','subtitulo':'Cadastre uma vez e o sistema passa a acompanhar estoque, custo e validade.','botao':'Salvar ingrediente'})
+
+@staff_member_required
+def nova_compra(request):
+    form=CompraForm(request.POST or None)
+    if request.method=='POST' and form.is_valid():
+        with transaction.atomic():
+            compra=form.save()
+            ing=compra.ingrediente; anterior=ing.quantidade; novo=compra.quantidade
+            if anterior+novo > 0:
+                ing.custo_unitario=((anterior*ing.custo_unitario)+compra.valor_total)/(anterior+novo)
+            ing.quantidade=anterior+novo; ing.save(update_fields=['quantidade','custo_unitario'])
+        messages.success(request,f'Compra registrada. Estoque de {ing.nome} atualizado e custo médio recalculado automaticamente.'); return redirect('estoque')
+    custo=None
+    if request.method=='POST' and form.is_bound:
+        try: custo=Decimal(request.POST.get('valor_total','0'))/Decimal(request.POST.get('quantidade','1'))
+        except: pass
+    return render(request,'gestao/form_simples.html',{'form':form,'titulo':'Registrar compra','subtitulo':'Informe somente o ingrediente, a quantidade e o total pago. O sistema atualiza o estoque e calcula o custo médio.','botao':'Registrar entrada','dica':'Exemplo: 10 latas por R$ 69,90 → o sistema calcula R$ 6,99 por lata.'})
+
+@staff_member_required
+def produtos_gestao(request):
+    produtos=Produto.objects.all().prefetch_related('receitas__ingrediente').order_by('nome')
+    return render(request,'gestao/produtos_gestao.html',{'produtos':produtos})
+
+@staff_member_required
+def novo_produto(request):
+    form=ProdutoRapidoForm(request.POST or None)
+    ingredientes=Ingrediente.objects.all().order_by('nome')
+    if request.method=='POST' and form.is_valid():
+        rendimento=form.cleaned_data['rendimento']; linhas=[]
+        for n in range(1,7):
+            iid=request.POST.get(f'ing_{n}'); qtd=request.POST.get(f'qtd_{n}')
+            if iid and qtd:
+                try: linhas.append((Ingrediente.objects.get(pk=iid),Decimal(qtd)))
+                except (Ingrediente.DoesNotExist,ValueError): pass
+        if not linhas:
+            form.add_error(None,'Adicione pelo menos um ingrediente da receita.')
+        else:
+            with transaction.atomic():
+                produto=form.save()
+                for ing,qtd in linhas: Receita.objects.create(produto=produto,ingrediente=ing,quantidade=qtd/Decimal(rendimento))
+            messages.success(request,f'{produto.nome} cadastrado. O custo e a margem agora são calculados automaticamente pela receita.'); return redirect('produtos_gestao')
+    return render(request,'gestao/novo_produto.html',{'form':form,'ingredientes':ingredientes})
+
+@staff_member_required
+def financeiro(request):
+    hoje=date.today(); form=DespesaForm(request.POST or None)
+    if request.method=='POST' and form.is_valid(): form.save(); messages.success(request,'Despesa registrada.'); return redirect('financeiro')
+    return render(request,'gestao/financeiro.html',{'fin':services.resumo_financeiro(hoje.year,hoje.month),'form':form,'despesas':Despesa.objects.order_by('-data')[:15]})
