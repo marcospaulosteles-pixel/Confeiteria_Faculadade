@@ -1,31 +1,8 @@
-{% extends "gestao/base.html" %}
-{% block titulo %}Painel{% endblock %}
-{% block conteudo %}
-<h1>Painel de {{ mes }}</h1>
-{% if novos %}<p class="aviso"><a href="/producao/">{{ novos }} pedido{{ novos|pluralize }} novo{{ novos|pluralize }} aguardando confirmação</a></p>{% endif %}
-
-<h2>Financeiro do mês</h2>
-<div class="numeros">
-  <div>Receita<b>R$ {{ fin.receita|floatformat:2 }}</b></div>
-  <div>Custo dos ingredientes<b>R$ {{ fin.custo|floatformat:2 }}</b></div>
-  <div>Outras despesas<b>R$ {{ fin.despesas|floatformat:2 }}</b></div>
-  <div>Lucro<b>R$ {{ fin.lucro|floatformat:2 }}</b></div>
-</div>
-<p class="suave">Considera {{ fin.qtd_pedidos }} pedido{{ fin.qtd_pedidos|pluralize }} produzido{{ fin.qtd_pedidos|pluralize }} ou entregue{{ fin.qtd_pedidos|pluralize }} com entrega neste mês. Cadastre gás, embalagens e taxas em Cadastros &gt; Despesas.</p>
-
-<h2>Alertas</h2>
-{% for i in vencendo %}<div class="alerta">Vence em breve: <strong>{{ i.nome }}</strong> ({{ i.validade|date:"d/m/Y" }})</div>{% endfor %}
-{% for i in baixos %}<div class="alerta">Estoque baixo: <strong>{{ i.nome }}</strong> ({{ i.quantidade }} {{ i.unidade }})</div>{% endfor %}
-{% if not vencendo and not baixos %}<p class="suave">Nenhum ingrediente vencendo ou acabando.</p>{% endif %}
-
-<h2>Demanda por mês</h2>
-{% for mes, itens in demanda %}
-  <h3>{{ mes|date:"F/Y" }}</h3>
-  <div class="rolagem"><table><tr><th>Doce</th><th>Quantidade pedida</th></tr>
-  {% for nome, qtd in itens %}<tr><td>{{ nome }}</td><td>{{ qtd }}</td></tr>{% endfor %}</table></div>
-{% empty %}<p class="suave">Ainda não há pedidos para analisar.</p>{% endfor %}
-
-<h2>Margem por doce</h2>
-<div class="rolagem"><table><tr><th>Doce</th><th>Preço</th><th>Custo</th><th>Margem</th></tr>
-{% for p, custo, margem in produtos %}<tr><td>{{ p.nome }}</td><td>R$ {{ p.preco|floatformat:2 }}</td><td>R$ {{ custo|floatformat:2 }}</td><td>R$ {{ margem|floatformat:2 }}</td></tr>{% endfor %}</table></div>
-{% endblock %}
+{% extends "gestao/base.html" %}{% block titulo %}Painel da confeitaria{% endblock %}{% block conteudo %}
+<section class="dashboard"><div class="container"><div class="dash-head"><div><span class="eyebrow">Visão do negócio</span><h1>Painel de {{ mes }}</h1><p>O essencial para organizar pedidos, custos e produção sem complicação.</p></div><a class="btn btn-primary" href="/producao/">Ver produção →</a></div>
+{% if novos %}<div class="notice"><strong>{{ novos }} pedido{{ novos|pluralize }} novo{{ novos|pluralize }}</strong> aguardando sua confirmação. <a href="/producao/">Revisar pedidos</a></div>{% endif %}
+<div class="cards dashboard-cards"><div class="metric"><span>Receita do mês</span><b>R$ {{ fin.receita|floatformat:2 }}</b><small>{{ fin.qtd_pedidos }} pedido{{ fin.qtd_pedidos|pluralize }} produzido{{ fin.qtd_pedidos|pluralize }} ou entregue{{ fin.qtd_pedidos|pluralize }}</small></div><div class="metric"><span>Custo dos ingredientes</span><b>R$ {{ fin.custo|floatformat:2 }}</b><small>Baseado nas receitas cadastradas</small></div><div class="metric"><span>Outras despesas</span><b>R$ {{ fin.despesas|floatformat:2 }}</b><small>Gás, embalagens, taxas e outros</small></div><div class="metric highlight"><span>Resultado estimado</span><b>R$ {{ fin.lucro|floatformat:2 }}</b><small>Receita menos custos e despesas</small></div></div>
+<div class="dash-grid"><section class="panel-card"><div class="panel-title"><div><span class="eyebrow">Atenção</span><h2>Estoque e validade</h2></div><span>📦</span></div>{% for i in vencendo %}<div class="alert">Vence em breve: <strong>{{ i.nome }}</strong> — {{ i.validade|date:"d/m/Y" }}</div>{% endfor %}{% for i in baixos %}<div class="alert">Estoque baixo: <strong>{{ i.nome }}</strong> — {{ i.quantidade }} {{ i.unidade }}</div>{% endfor %}{% if not vencendo and not baixos %}<div class="success">Tudo certo por aqui. Nenhum ingrediente vencendo ou abaixo do mínimo.</div>{% endif %}</section>
+<section class="panel-card"><div class="panel-title"><div><span class="eyebrow">Planejamento</span><h2>Demanda por mês</h2></div><span>📅</span></div>{% for mes, itens in demanda %}<h3>{{ mes|date:"F/Y" }}</h3><div class="table-wrap"><table><tr><th>Produto</th><th>Quantidade</th></tr>{% for nome, qtd in itens %}<tr><td>{{ nome }}</td><td><strong>{{ qtd }}</strong></td></tr>{% endfor %}</table></div>{% empty %}<p class="muted">Ainda não há pedidos suficientes para analisar a demanda.</p>{% endfor %}</section></div>
+<section class="panel-card margin-panel"><div class="panel-title"><div><span class="eyebrow">Precificação</span><h2>Margem por produto</h2></div><span>↗</span></div><p class="muted">Uma visão rápida para ajudar a entender quais produtos deixam melhor retorno.</p><div class="table-wrap"><table><tr><th>Produto</th><th>Preço</th><th>Custo</th><th>Margem</th></tr>{% for p, custo, margem in produtos %}<tr><td><strong>{{ p.nome }}</strong></td><td>R$ {{ p.preco|floatformat:2 }}</td><td>R$ {{ custo|floatformat:2 }}</td><td><strong>R$ {{ margem|floatformat:2 }}</strong></td></tr>{% endfor %}</table></div></section>
+</div></section>{% endblock %}
