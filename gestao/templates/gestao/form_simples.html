@@ -1,1 +1,8 @@
-{% extends "gestao/base.html" %}{% block conteudo %}<h1>{{ titulo }}</h1><p class="suave">{{ subtitulo }}</p>{% if dica %}<div class="aviso">💡 {{ dica }}</div>{% endif %}<form method="post" class="cartao">{% csrf_token %}{{ form.non_field_errors }}{% for campo in form %}<label>{{ campo.label }}</label>{{ campo }}{% if campo.help_text %}<small class="suave">{{ campo.help_text }}</small>{% endif %}{{ campo.errors }}{% endfor %}<p><button>{{ botao }}</button> <a href="javascript:history.back()">Cancelar</a></p></form>{% endblock %}
+{% extends "gestao/gestao_base.html" %}{% block titulo %}{{ titulo }}{% endblock %}
+{% block g_tag %}Cadastro{% endblock %}
+{% block g_titulo %}{{ titulo }}{% endblock %}
+{% block g_sub %}{{ subtitulo }}{% endblock %}
+{% block g_conteudo %}
+{% if dica %}<div class="aviso">💡 {{ dica }}</div>{% endif %}
+<form method="post" class="cartao" style="max-width:720px">{% csrf_token %}{{ form.non_field_errors }}{% for campo in form %}<label>{{ campo.label }}</label>{{ campo }}{% if campo.help_text %}<small class="suave">{{ campo.help_text }}</small>{% endif %}{{ campo.errors }}{% endfor %}<p style="margin-top:22px"><button>{{ botao }}</button> <a href="javascript:history.back()" style="margin-left:12px">Cancelar</a></p></form>
+{% endblock %}

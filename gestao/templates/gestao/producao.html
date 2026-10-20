@@ -1,8 +1,9 @@
-{% extends "gestao/base.html" %}
+{% extends "gestao/gestao_base.html" %}
 {% block titulo %}Produção{% endblock %}
-{% block conteudo %}
-<h1>Ordem de produção</h1>
-
+{% block g_tag %}Encomendas{% endblock %}
+{% block g_titulo %}Ordem de produção{% endblock %}
+{% block g_sub %}Pedidos em andamento por data de entrega e o que falta comprar.{% endblock %}
+{% block g_conteudo %}
 {% if compras %}
 <h2>Lista de compras</h2>
 <p class="suave">O que falta no estoque para os pedidos confirmados:</p>
