@@ -1,0 +1,10 @@
+{% extends 'gestao/base.html' %}
+{% block titulo %}Acompanhar pedido #{{pedido.id}}{% endblock %}
+{% block conteudo %}
+<section class="section"><div class="container" style="max-width:780px"><div class="section-head"><span class="eyebrow">Acompanhamento</span><h2>Pedido #{{pedido.id}}</h2><p>Olá, {{pedido.cliente}}. Aqui você acompanha a situação da sua encomenda para {{pedido.data_entrega|date:'d/m/Y'}}.</p></div>
+{% if pedido.status == 'cancelado' %}<div class="alert"><strong>Pedido cancelado.</strong> Entre em contato pelo WhatsApp se precisar de ajuda.</div>{% else %}
+<div class="panel-card"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:center">{% for codigo,nome in pedido.STATUS %}<span></span>{% endfor %}
+<div><div style="font-size:1.6rem">{% if progresso >= 1 %}✓{% else %}○{% endif %}</div><strong>Recebido</strong></div><div><div style="font-size:1.6rem">{% if progresso >= 2 %}✓{% else %}○{% endif %}</div><strong>Confirmado</strong></div><div><div style="font-size:1.6rem">{% if progresso >= 3 %}✓{% else %}○{% endif %}</div><strong>Pronto</strong></div><div><div style="font-size:1.6rem">{% if progresso >= 4 %}✓{% else %}○{% endif %}</div><strong>Finalizado</strong></div></div></div>{% endif %}
+<div class="panel-card" style="margin-top:18px"><h3>Resumo</h3>{% for i in pedido.itens.all %}<p>{{i.quantidade}}× {{i.produto.nome}} — R$ {{i.subtotal|floatformat:2}}</p>{% endfor %}{% if pedido.taxa_entrega %}<p>Taxa de entrega — R$ {{pedido.taxa_entrega|floatformat:2}}</p>{% endif %}<p><strong>Total: R$ {{pedido.total|floatformat:2}}</strong></p><p>{{pedido.get_entrega_display}}{% if pedido.endereco %} • {{pedido.endereco}}{% endif %}</p></div>
+</div></section>
+{% endblock %}

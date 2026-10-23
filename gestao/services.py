@@ -4,10 +4,11 @@ from django.db import transaction
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
 from .models import Despesa,ItemPedido,Pedido
+
 class EstoqueInsuficiente(Exception): pass
 
 def resumo_financeiro(ano,mes):
-    pedidos=Pedido.objects.filter(data_entrega__year=ano,data_entrega__month=mes,status__in=['produzido','entregue']).prefetch_related('itens__produto__receitas__ingrediente')
+    pedidos=Pedido.objects.filter(data_entrega__year=ano,data_entrega__month=mes,status__in=['produzido','entregue']).prefetch_related('itens__produto__receitas__ingrediente','itens__produto__componentes__produto__receitas__ingrediente')
     receita=sum((p.total for p in pedidos),Decimal('0')); custo=Decimal('0')
     for p in pedidos:
         for item in p.itens.all(): custo += item.produto.custo()*item.quantidade
@@ -20,11 +21,19 @@ def demanda_mensal():
     for x in dados: grupos[x['mes']].append((x['produto__nome'],x['qtd']))
     return list(grupos.items())
 
+def _receitas_item(produto,multiplicador=Decimal('1')):
+    if produto.tipo=='kit' and produto.componentes.exists():
+        for comp in produto.componentes.select_related('produto').all():
+            yield from _receitas_item(comp.produto,multiplicador*Decimal(comp.quantidade))
+    else:
+        for r in produto.receitas.select_related('ingrediente').all():
+            yield r.ingrediente, r.quantidade*multiplicador
+
 def necessidades(pedidos):
     req=defaultdict(Decimal)
     for p in pedidos:
-        for item in p.itens.select_related('produto').prefetch_related('produto__receitas__ingrediente'):
-            for r in item.produto.receitas.all(): req[r.ingrediente] += r.quantidade*item.quantidade
+        for item in p.itens.select_related('produto'):
+            for ing,qtd in _receitas_item(item.produto,Decimal(item.quantidade)): req[ing]+=qtd
     return req
 
 def lista_de_compras(pedidos):
