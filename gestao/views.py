@@ -1,7 +1,7 @@
 import csv
 import io
 import json
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.conf import settings
@@ -65,14 +65,162 @@ def acompanhar_pedido(request, token):
 
 @staff_member_required
 def painel(request):
-    hoje=date.today(); ingredientes=list(Ingrediente.objects.all()); produtos=list(Produto.objects.filter(ativo=True))
-    mensal=(Pedido.objects.exclude(status='cancelado').annotate(mes=TruncMonth('data_entrega')).values('mes').annotate(total=Sum('itens__preco_unitario')).order_by('mes'))
-    # total de vendas por produto usando preço preservado x quantidade
-    expr=ExpressionWrapper(F('preco_unitario')*F('quantidade'),output_field=DecimalField(max_digits=14,decimal_places=2))
-    top=list(ItemPedido.objects.filter(pedido__status__in=['confirmado','produzido','entregue']).values('produto__nome').annotate(qtd=Sum('quantidade'),valor=Sum(expr)).order_by('-qtd')[:8])
-    meses=list(Pedido.objects.filter(status__in=['confirmado','produzido','entregue']).annotate(mes=TruncMonth('data_entrega')).values('mes').annotate(qtd=Sum('itens__quantidade')).order_by('mes'))[-12:]
-    contexto={'mes':hoje.strftime('%m/%Y'),'fin':services.resumo_financeiro(hoje.year,hoje.month),'vencendo':[i for i in ingredientes if i.vencendo()],'baixos':[i for i in ingredientes if i.estoque_baixo()],'demanda':services.demanda_mensal(),'produtos':[(p,p.custo(),p.margem()) for p in produtos],'novos':Pedido.objects.filter(status='novo').count(),'graf_produtos':top,'graf_meses':meses}
-    return render(request,'gestao/painel.html',contexto)
+    hoje = date.today()
+    ingredientes = list(Ingrediente.objects.all())
+    produtos = list(Produto.objects.filter(ativo=True))
+
+    # O período escolhido controla todos os indicadores e gráficos do painel.
+    periodo = request.GET.get('periodo', '6m')
+    periodos_validos = {'7d', '30d', '6m', '1a'}
+    if periodo not in periodos_validos:
+        periodo = '6m'
+
+    def primeiro_mes_meses_atras(meses_atras):
+        indice = hoje.year * 12 + (hoje.month - 1) - meses_atras
+        return date(indice // 12, indice % 12 + 1, 1)
+
+    if periodo == '7d':
+        inicio_periodo = hoje - timedelta(days=6)
+        periodo_label = 'Últimos 7 dias'
+        granularidade = 'dia'
+    elif periodo == '30d':
+        inicio_periodo = hoje - timedelta(days=29)
+        periodo_label = 'Últimos 30 dias'
+        granularidade = 'dia'
+    elif periodo == '1a':
+        inicio_periodo = primeiro_mes_meses_atras(11)
+        periodo_label = 'Último ano'
+        granularidade = 'mes'
+    else:
+        inicio_periodo = primeiro_mes_meses_atras(5)
+        periodo_label = 'Últimos 6 meses'
+        granularidade = 'mes'
+
+    pedidos_periodo = list(
+        Pedido.objects.filter(
+            status__in=['produzido', 'entregue'],
+            data_entrega__range=(inicio_periodo, hoje),
+        ).prefetch_related(
+            'itens__produto__receitas__ingrediente',
+            'itens__produto__componentes__produto__receitas__ingrediente',
+        )
+    )
+
+    despesas_periodo = list(
+        Despesa.objects.filter(data__range=(inicio_periodo, hoje)).values('data', 'valor')
+    )
+
+    # Cria as posições do eixo X e a função que associa cada data ao seu ponto.
+    pontos = []
+    if granularidade == 'dia':
+        atual = inicio_periodo
+        while atual <= hoje:
+            pontos.append({'chave': atual, 'label': atual.strftime('%d/%m')})
+            atual += timedelta(days=1)
+        chave_data = lambda d: d
+    else:
+        atual = date(inicio_periodo.year, inicio_periodo.month, 1)
+        while atual <= date(hoje.year, hoje.month, 1):
+            pontos.append({'chave': (atual.year, atual.month), 'label': atual.strftime('%m/%y')})
+            if atual.month == 12:
+                atual = date(atual.year + 1, 1, 1)
+            else:
+                atual = date(atual.year, atual.month + 1, 1)
+        chave_data = lambda d: (d.year, d.month)
+
+    financeiro_mapa = {p['chave']: {'receita': Decimal('0'), 'custo': Decimal('0'), 'despesas': Decimal('0')} for p in pontos}
+    receita_total = Decimal('0')
+    custo_total = Decimal('0')
+
+    for pedido in pedidos_periodo:
+        chave = chave_data(pedido.data_entrega)
+        receita_pedido = pedido.total
+        custo_pedido = Decimal('0')
+        for item in pedido.itens.all():
+            custo_pedido += item.produto.custo() * item.quantidade
+        receita_total += receita_pedido
+        custo_total += custo_pedido
+        if chave in financeiro_mapa:
+            financeiro_mapa[chave]['receita'] += receita_pedido
+            financeiro_mapa[chave]['custo'] += custo_pedido
+
+    despesas_total = Decimal('0')
+    for despesa in despesas_periodo:
+        chave = chave_data(despesa['data'])
+        despesas_total += despesa['valor']
+        if chave in financeiro_mapa:
+            financeiro_mapa[chave]['despesas'] += despesa['valor']
+
+    graf_financeiro = []
+    for ponto in pontos:
+        valores = financeiro_mapa[ponto['chave']]
+        lucro = valores['receita'] - valores['custo'] - valores['despesas']
+        graf_financeiro.append({
+            'mes': ponto['label'],
+            'receita': float(valores['receita']),
+            'lucro': float(lucro),
+        })
+
+    fin = {
+        'receita': receita_total,
+        'custo': custo_total,
+        'despesas': despesas_total,
+        'lucro': receita_total - custo_total - despesas_total,
+        'qtd_pedidos': len(pedidos_periodo),
+    }
+    ticket_medio = (receita_total / len(pedidos_periodo)) if pedidos_periodo else Decimal('0')
+
+    # Consolida quantidade e receita por produto usando o preço registrado no pedido.
+    produto_metricas = {}
+    vendas_por_ponto = {}
+    for pedido in pedidos_periodo:
+        chave = chave_data(pedido.data_entrega)
+        for item in pedido.itens.all():
+            pid = item.produto_id
+            preco = item.preco_unitario if item.preco_unitario is not None else item.produto.preco
+            receita_item = preco * item.quantidade
+            info = produto_metricas.setdefault(pid, {
+                'id': pid, 'nome': item.produto.nome, 'qtd': 0, 'receita': Decimal('0')
+            })
+            info['qtd'] += item.quantidade
+            info['receita'] += receita_item
+            vendas_por_ponto[(chave, pid)] = vendas_por_ponto.get((chave, pid), 0) + item.quantidade
+
+    ranking_quantidade = sorted(produto_metricas.values(), key=lambda x: (-x['qtd'], x['nome']))
+    ranking_receita = sorted(produto_metricas.values(), key=lambda x: (-x['receita'], x['nome']))
+    mais_vendido = ranking_quantidade[0] if ranking_quantidade else None
+    maior_receita = ranking_receita[0] if ranking_receita else None
+
+    top_produtos = ranking_quantidade[:5]
+    ids_top = [x['id'] for x in top_produtos]
+    graf_produtos = []
+    for ponto in pontos:
+        linha = {'mes': ponto['label']}
+        for produto_id in ids_top:
+            linha[str(produto_id)] = vendas_por_ponto.get((ponto['chave'], produto_id), 0)
+        graf_produtos.append(linha)
+    series_produtos = [{'id': str(x['id']), 'nome': x['nome']} for x in top_produtos]
+
+    contexto = {
+        'mes': hoje.strftime('%m/%Y'),
+        'periodo': periodo,
+        'periodo_label': periodo_label,
+        'inicio_periodo': inicio_periodo,
+        'fim_periodo': hoje,
+        'fin': fin,
+        'ticket_medio': ticket_medio,
+        'mais_vendido': mais_vendido,
+        'maior_receita': maior_receita,
+        'vencendo': [i for i in ingredientes if i.vencendo()],
+        'baixos': [i for i in ingredientes if i.estoque_baixo()],
+        'demanda': services.demanda_mensal(),
+        'produtos': [(p, p.custo(), p.margem()) for p in produtos],
+        'novos': Pedido.objects.filter(status='novo').count(),
+        'graf_financeiro': graf_financeiro,
+        'graf_produtos': graf_produtos,
+        'series_produtos': series_produtos,
+    }
+    return render(request, 'gestao/painel.html', contexto)
 
 
 @staff_member_required

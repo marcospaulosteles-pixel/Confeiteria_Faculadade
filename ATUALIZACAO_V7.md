@@ -44,3 +44,11 @@ Dessa forma a foto acompanha o projeto/deploy e não depende de Pinterest.
 
 ## Observação de hospedagem
 A aplicação é Django e precisa de execução Python + banco/armazenamento. Netlify é mais indicado para front-end/static e não é o destino recomendado para esta versão completa.
+
+## Atualização V7.1 — painel de gráficos
+
+- Gráfico de linha de Receita × Lucro estimado nos últimos 6 meses.
+- Gráfico de linha com evolução dos 5 produtos mais vendidos.
+- Indicador de produto mais vendido no mês.
+- Indicador de ticket médio mensal.
+- Gráficos responsivos e sem dependência de CDN externa.

@@ -1,14 +1,133 @@
 {% extends 'gestao/gestao_base.html' %}
-{% block g_tag %}Indicadores{% endblock %}{% block g_titulo %}Painel da confeitaria{% endblock %}{% block g_sub %}Vendas, produtos, custos e alertas em uma visão rápida.{% endblock %}
+{% load static %}
+{% block g_tag %}Indicadores{% endblock %}
+{% block g_titulo %}Painel da confeitaria{% endblock %}
+{% block g_sub %}Acompanhe vendas, lucro, produtos e pedidos em uma visão rápida e visual.{% endblock %}
 {% block g_conteudo %}
-<div class="numeros"><div>Receita do mês<b>R$ {{fin.receita|floatformat:2}}</b></div><div>Lucro estimado<b>R$ {{fin.lucro|floatformat:2}}</b></div><div>Pedidos concluídos<b>{{fin.qtd_pedidos}}</b></div><div>Novos pedidos<b>{{novos}}</b></div></div>
-<div class="grade-admin"><div class="cartao"><h2>Vendas por produto</h2><div id="graf-produtos"></div></div><div class="cartao"><h2>Volume por mês</h2><div id="graf-meses"></div></div></div>
-{{ graf_produtos|json_script:'dados-produtos' }}{{ graf_meses|json_script:'dados-meses' }}
+<style>
+.filtro-periodo{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin:18px 0 8px;box-shadow:0 8px 26px rgba(73,28,39,.04)}
+.filtro-periodo .rotulo{color:var(--muted);font-size:.9rem}.filtro-periodo .rotulo strong{display:block;color:var(--wine);font-size:1rem;margin-bottom:2px}.periodos{display:flex;gap:8px;flex-wrap:wrap}.periodos a{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:var(--wine);background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 13px;font-size:.86rem;font-weight:700;transition:.18s ease}.periodos a:hover{transform:translateY(-1px);border-color:var(--wine2)}.periodos a.ativo{background:var(--wine);border-color:var(--wine);color:#fff}
+.dashboard-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:14px;margin:16px 0 26px}.dashboard-kpi{position:relative;overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 20px;min-height:110px;box-shadow:0 8px 26px rgba(73,28,39,.04)}.dashboard-kpi:after{content:"";position:absolute;right:-18px;bottom:-26px;width:82px;height:82px;border-radius:50%;background:var(--rose);opacity:.7}.dashboard-kpi span{display:block;color:var(--muted);font-size:.79rem;font-weight:700;text-transform:uppercase;letter-spacing:.055em}.dashboard-kpi b{position:relative;z-index:1;display:block;color:var(--wine);font:700 1.48rem Georgia,serif;margin-top:7px;line-height:1.15}.dashboard-kpi small{position:relative;z-index:1;color:var(--muted);display:block;margin-top:4px}
+.graficos-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:18px;margin:10px 0 28px}.grafico-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px 24px;box-shadow:0 10px 30px rgba(73,28,39,.055);min-width:0}.grafico-card h2{margin:0;font-size:1.24rem}.grafico-card .graf-sub{margin:5px 0 18px;color:var(--muted);font-size:.9rem}.grafico-wrap{position:relative;height:320px}.grafico-vazio{display:flex;height:100%;align-items:center;justify-content:center;color:var(--muted);text-align:center;padding:20px}
+@media(max-width:900px){.graficos-grid{grid-template-columns:1fr}.grafico-wrap{height:285px}}@media(max-width:560px){.filtro-periodo{align-items:flex-start}.periodos{width:100%}.periodos a{flex:1;padding:8px 7px}.dashboard-kpis{grid-template-columns:1fr 1fr}.dashboard-kpi{padding:15px;min-width:0}.dashboard-kpi b{font-size:1.25rem}}
+</style>
+
+<div class="filtro-periodo">
+  <div class="rotulo"><strong>{{ periodo_label }}</strong>{{ inicio_periodo|date:'d/m/Y' }} até {{ fim_periodo|date:'d/m/Y' }}</div>
+  <nav class="periodos" aria-label="Período do painel">
+    <a href="?periodo=7d" class="{% if periodo == '7d' %}ativo{% endif %}">7 dias</a>
+    <a href="?periodo=30d" class="{% if periodo == '30d' %}ativo{% endif %}">30 dias</a>
+    <a href="?periodo=6m" class="{% if periodo == '6m' %}ativo{% endif %}">6 meses</a>
+    <a href="?periodo=1a" class="{% if periodo == '1a' %}ativo{% endif %}">1 ano</a>
+  </nav>
+</div>
+
+<div class="dashboard-kpis">
+  <div class="dashboard-kpi"><span>Receita do período</span><b>R$ {{ fin.receita|floatformat:2 }}</b><small>{{ periodo_label }}</small></div>
+  <div class="dashboard-kpi"><span>Lucro estimado</span><b>R$ {{ fin.lucro|floatformat:2 }}</b><small>Receita − custos − despesas</small></div>
+  <div class="dashboard-kpi"><span>Mais vendido</span><b>{% if mais_vendido %}{{ mais_vendido.nome }}{% else %}—{% endif %}</b><small>{% if mais_vendido %}{{ mais_vendido.qtd }} unidade{{ mais_vendido.qtd|pluralize }}{% else %}Sem vendas no período{% endif %}</small></div>
+  <div class="dashboard-kpi"><span>Maior receita</span><b>{% if maior_receita %}{{ maior_receita.nome }}{% else %}—{% endif %}</b><small>{% if maior_receita %}R$ {{ maior_receita.receita|floatformat:2 }} em produtos{% else %}Sem vendas no período{% endif %}</small></div>
+  <div class="dashboard-kpi"><span>Ticket médio</span><b>R$ {{ ticket_medio|floatformat:2 }}</b><small>{{ fin.qtd_pedidos }} pedido{{ fin.qtd_pedidos|pluralize }} concluído{{ fin.qtd_pedidos|pluralize }}</small></div>
+  <div class="dashboard-kpi"><span>Novos pedidos</span><b>{{ novos }}</b><small>Aguardando confirmação</small></div>
+</div>
+
+<div class="graficos-grid">
+  <section class="grafico-card">
+    <h2>Receita × lucro</h2>
+    <p class="graf-sub">Evolução financeira — {{ periodo_label|lower }}.</p>
+    <div class="grafico-wrap" id="graf-financeiro"></div>
+  </section>
+  <section class="grafico-card">
+    <h2>Produtos mais vendidos</h2>
+    <p class="graf-sub">Evolução dos 5 produtos com maior quantidade vendida no período.</p>
+    <div class="grafico-wrap" id="graf-produtos"></div>
+  </section>
+</div>
+
+{{ graf_financeiro|json_script:'dados-financeiro' }}
+{{ graf_produtos|json_script:'dados-produtos' }}
+{{ series_produtos|json_script:'series-produtos' }}
 <script>
-function barras(el,dados,labelFn,valueFn){if(!dados.length){el.innerHTML='<p class="suave">Ainda não há dados suficientes.</p>';return}const max=Math.max(...dados.map(valueFn),1);el.innerHTML=dados.map(x=>`<div style="margin:13px 0"><div style="display:flex;justify-content:space-between;gap:12px"><strong>${labelFn(x)}</strong><span>${valueFn(x)}</span></div><div style="height:12px;background:#f1e5e7;border-radius:99px;overflow:hidden"><div style="height:100%;width:${Math.max(4,valueFn(x)/max*100)}%;background:var(--wine);border-radius:99px"></div></div></div>`).join('')}
-const ps=JSON.parse(document.getElementById('dados-produtos').textContent); barras(document.getElementById('graf-produtos'),ps,x=>x['produto__nome'],x=>x.qtd);
-const ms=JSON.parse(document.getElementById('dados-meses').textContent); barras(document.getElementById('graf-meses'),ms,x=>{let d=new Date(x.mes);return String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()},x=>x.qtd||0);
+(function(){
+  const financeiro = JSON.parse(document.getElementById('dados-financeiro').textContent);
+  const produtos = JSON.parse(document.getElementById('dados-produtos').textContent);
+  const seriesProdutos = JSON.parse(document.getElementById('series-produtos').textContent);
+  const css = getComputedStyle(document.documentElement);
+  const wine = css.getPropertyValue('--wine').trim() || '#8b1835';
+  const wine2 = css.getPropertyValue('--wine2').trim() || '#b85269';
+  const muted = css.getPropertyValue('--muted').trim() || '#77666a';
+  const grid = css.getPropertyValue('--line').trim() || '#eadcda';
+  const palette = [wine, wine2, '#7f9a70', '#c58c55', '#75658f'];
+  const dinheiro = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+  const NS='http://www.w3.org/2000/svg';
+
+  function el(tag, attrs={}, text=''){
+    const n=document.createElementNS(NS,tag);
+    Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));
+    if(text) n.textContent=text;
+    return n;
+  }
+
+  function graficoLinha(container, labels, series, formatoY){
+    if(!labels.length || !series.length){
+      container.innerHTML='<div class="grafico-vazio">Ainda não há dados suficientes para gerar este gráfico.</div>';
+      return;
+    }
+    const W=820,H=300,L=65,R=18,T=22,B=52, plotW=W-L-R, plotH=H-T-B;
+    const todos=series.flatMap(s=>s.valores);
+    let min=Math.min(0,...todos), max=Math.max(1,...todos);
+    if(max===min) max=min+1;
+    const folga=(max-min)*.10; max+=folga; if(min<0) min-=folga;
+    const x=i=>L+(labels.length===1?plotW/2:i*plotW/(labels.length-1));
+    const y=v=>T+(max-v)*plotH/(max-min);
+    const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,'aria-label':'Gráfico de linha',role:'img'});
+    svg.style.width='100%'; svg.style.height='100%'; svg.style.overflow='visible';
+
+    for(let i=0;i<=4;i++){
+      const yy=T+i*plotH/4, valor=max-i*(max-min)/4;
+      svg.appendChild(el('line',{x1:L,y1:yy,x2:W-R,y2:yy,stroke:grid,'stroke-width':1}));
+      svg.appendChild(el('text',{x:L-10,y:yy+4,'text-anchor':'end',fill:muted,'font-size':11},formatoY(valor)));
+    }
+    const passoRotulo=Math.max(1,Math.ceil(labels.length/8));
+    labels.forEach((lab,i)=>{
+      if(i%passoRotulo===0 || i===labels.length-1){
+        svg.appendChild(el('text',{x:x(i),y:H-20,'text-anchor':'middle',fill:muted,'font-size':11},lab));
+      }
+    });
+
+    series.forEach((s,si)=>{
+      const cor=palette[si%palette.length];
+      const pontos=s.valores.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+      svg.appendChild(el('polyline',{points:pontos,fill:'none',stroke:cor,'stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'}));
+      s.valores.forEach((v,i)=>{
+        const c=el('circle',{cx:x(i),cy:y(v),r:labels.length>20?3.2:4.5,fill:'#fff',stroke:cor,'stroke-width':2.5});
+        c.appendChild(el('title',{},`${s.nome} — ${labels[i]}: ${s.tooltip ? s.tooltip(v) : v}`));
+        svg.appendChild(c);
+      });
+    });
+    container.innerHTML=''; container.appendChild(svg);
+
+    const legenda=document.createElement('div');
+    legenda.style.cssText='display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:-8px;font-size:.82rem;color:'+muted;
+    series.forEach((s,i)=>{
+      const item=document.createElement('span'); item.style.display='inline-flex'; item.style.alignItems='center'; item.style.gap='6px';
+      const ponto=document.createElement('i'); ponto.style.cssText=`display:inline-block;width:9px;height:9px;border-radius:50%;background:${palette[i%palette.length]}`;
+      item.appendChild(ponto); item.appendChild(document.createTextNode(s.nome)); legenda.appendChild(item);
+    });
+    container.appendChild(legenda);
+  }
+
+  graficoLinha(document.getElementById('graf-financeiro'), financeiro.map(x=>x.mes), [
+    {nome:'Receita',valores:financeiro.map(x=>x.receita),tooltip:v=>dinheiro.format(v)},
+    {nome:'Lucro estimado',valores:financeiro.map(x=>x.lucro),tooltip:v=>dinheiro.format(v)}
+  ], v=>dinheiro.format(v));
+
+  graficoLinha(document.getElementById('graf-produtos'), produtos.map(x=>x.mes),
+    seriesProdutos.map(s=>({nome:s.nome,valores:produtos.map(x=>x[s.id]||0),tooltip:v=>`${v} un.`})),
+    v=>Math.round(v).toString());
+})();
 </script>
+
 {% if baixos %}<h2>Estoque baixo</h2>{% for i in baixos %}<div class="alerta">{{i.nome}} — {{i.quantidade}} {{i.unidade}}</div>{% endfor %}{% endif %}
 {% if vencendo %}<h2>Validades próximas</h2>{% for i in vencendo %}<div class="aviso">{{i.nome}} — {{i.validade|date:'d/m/Y'}}</div>{% endfor %}{% endif %}
 {% endblock %}
