@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-from . import bot, services
+from . import bot, services, whatsapp
 from .forms import PedidoForm
 from .models import Ingrediente, ItemPedido, Pedido, Produto
 
@@ -37,13 +37,22 @@ def cardapio(request):
                 pedido.save()
                 for p, q in quantidades.items():
                     ItemPedido.objects.create(pedido=pedido, produto=p, quantidade=q)
+            request.session["ultimo_pedido"] = pedido.pk
             return redirect("pedido_enviado")
     return render(request, "gestao/cardapio.html", {"produtos": produtos, "form": form,
                                                     "dias": settings.ANTECEDENCIA_MINIMA_DIAS})
 
 
 def pedido_enviado(request):
-    return render(request, "gestao/enviado.html")
+    """Confirmação do pedido, com botão para enviar o resumo à confeiteira pelo WhatsApp."""
+    pedido = None
+    pk = request.session.get("ultimo_pedido")
+    if pk:
+        pedido = Pedido.objects.filter(pk=pk).prefetch_related("itens__produto").first()
+    link_whats = ""
+    if pedido and settings.WHATSAPP_LOJA:
+        link_whats = whatsapp.link(settings.WHATSAPP_LOJA, whatsapp.texto_pedido_para_loja(pedido))
+    return render(request, "gestao/enviado.html", {"pedido": pedido, "link_whats": link_whats})
 
 
 @staff_member_required

@@ -1,4 +1,4 @@
-{% extends "gestao/gestao_base.html" %}
+{% extends "gestao/gestao_base.html" %}{% load whatsapp_tags %}
 {% block titulo %}Produção{% endblock %}
 {% block g_tag %}Encomendas{% endblock %}
 {% block g_titulo %}Ordem de produção{% endblock %}
@@ -20,6 +20,7 @@
   {% if p.observacoes %}<p class="suave">{{ p.observacoes }}</p>{% endif %}
   <strong>Total: R$ {{ p.total|floatformat:2 }}</strong>
   <div class="acoes">
+    <a class="botao btn-whats" href="{{ p|wa_cliente }}" target="_blank" rel="noopener" style="margin:0">💬 WhatsApp do cliente</a>
     {% if p.status == "novo" %}<form method="post">{% csrf_token %}<input type="hidden" name="pedido" value="{{ p.id }}"><button name="acao" value="confirmar">Confirmar pedido</button></form>{% endif %}
     {% if p.status == "confirmado" %}<form method="post">{% csrf_token %}<input type="hidden" name="pedido" value="{{ p.id }}"><button name="acao" value="produzir">Marcar como produzido</button></form>{% endif %}
     {% if p.status == "produzido" %}<form method="post">{% csrf_token %}<input type="hidden" name="pedido" value="{{ p.id }}"><button name="acao" value="entregar" class="sec">Marcar como entregue</button></form>{% endif %}

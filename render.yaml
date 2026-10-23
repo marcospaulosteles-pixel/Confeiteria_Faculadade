@@ -22,6 +22,10 @@ services:
         value: "False"
       - key: NOME_LOJA
         value: "Doces feitos com amor"
+      - key: WHATSAPP_LOJA
+        sync: false
+      - key: NOME_MARCA
+        value: "Doce Encanto"
       - key: ANTECEDENCIA_MINIMA_DIAS
         value: "3"
       - key: DJANGO_SUPERUSER_USERNAME

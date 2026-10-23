@@ -1,5 +1,9 @@
 {% extends "gestao/base.html" %}
 {% block titulo %}Pedido recebido{% endblock %}
 {% block conteudo %}
-<section class="container" style="padding:64px 0;max-width:720px"><div class="order-box" style="margin-top:0;text-align:center"><div style="font-size:3rem">🎉</div><h1>Pedido recebido!</h1><p class="muted">Recebemos o seu pedido e vamos confirmar a data pelo WhatsApp. Obrigada por escolher doces feitos com carinho.</p><p><a class="btn btn-primary" href="/">Fazer outro pedido</a></p></div></section>
+<section class="container" style="padding:64px 0;max-width:720px"><div class="order-box" style="margin-top:0;text-align:center"><div style="font-size:3rem">🎉</div><h1>Pedido recebido!</h1>
+<p class="muted">Recebemos o seu pedido e vamos confirmar a data pelo WhatsApp. Obrigada por escolher doces feitos com carinho.</p>
+{% if pedido %}<div style="text-align:left;background:var(--rose);border-radius:18px;padding:16px 20px;margin:20px 0"><strong>Pedido #{{ pedido.pk }}</strong> · {{ pedido.data_entrega|date:"d/m/Y" }}<ul style="margin:8px 0;padding-left:20px">{% for i in pedido.itens.all %}<li>{{ i.quantidade }}x {{ i.produto.nome }}</li>{% endfor %}</ul><strong>Total estimado: R$ {{ pedido.total|floatformat:2 }}</strong></div>{% endif %}
+{% if link_whats %}<p><a class="btn btn-whats" href="{{ link_whats }}" target="_blank" rel="noopener">💬 Enviar meu pedido pelo WhatsApp</a></p><p class="muted" style="font-size:.9rem">Assim a confeiteira recebe o resumo na hora e confirma com você mais rápido.</p>{% endif %}
+<p><a class="btn btn-secondary" href="/">Fazer outro pedido</a></p></div></section>
 {% endblock %}

@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import re
 import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,6 +41,7 @@ TEMPLATES = [{
         "django.template.context_processors.request",
         "django.contrib.auth.context_processors.auth",
         "django.contrib.messages.context_processors.messages",
+        "gestao.context_processors.loja",
     ]},
 }]
 WSGI_APPLICATION = "config.wsgi.application"
@@ -66,6 +68,9 @@ STORAGES = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 ANTECEDENCIA_MINIMA_DIAS = int(os.getenv("ANTECEDENCIA_MINIMA_DIAS", "3"))
 NOME_LOJA = os.getenv("NOME_LOJA", "Doces feitos com amor")
+NOME_MARCA = os.getenv("NOME_MARCA", "Doce Encanto")
+# WhatsApp da confeiteira, só números com país e DDD. Ex.: 5534999998888
+WHATSAPP_LOJA = re.sub(r"\D", "", os.getenv("WHATSAPP_LOJA", ""))
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 LOGIN_URL = "/admin/login/"
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
