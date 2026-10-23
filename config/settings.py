@@ -76,3 +76,10 @@ LOGIN_URL = "/admin/login/"
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
+
+# Preencha no Render > Environment. Dados jurídicos nunca devem ser inventados.
+LEGAL_NOME=os.getenv("LEGAL_NOME","A preencher antes da publicação comercial")
+LEGAL_DOCUMENTO=os.getenv("LEGAL_DOCUMENTO","A preencher antes da publicação comercial")
+LEGAL_ENDERECO=os.getenv("LEGAL_ENDERECO","A preencher antes da publicação comercial")
+LEGAL_CONTATO=os.getenv("LEGAL_CONTATO","A preencher antes da publicação comercial")
+LEGAL_EMAIL_PRIVACIDADE=os.getenv("LEGAL_EMAIL_PRIVACIDADE","A preencher antes da publicação comercial")

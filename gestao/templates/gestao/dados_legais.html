@@ -1,0 +1,4 @@
+{% extends "gestao/base.html" %}{% block titulo %}Dados legais • Doce Encanto{% endblock %}{% block conteudo %}
+<section class="section"><div class="container legal-page"><span class="eyebrow">Identificação do fornecedor</span><h1>Dados legais</h1>
+<div class="legal-warning"><strong>Antes do uso comercial:</strong> substitua todos os campos “A preencher” pelos dados verdadeiros do fornecedor nas variáveis de ambiente do Render.</div>
+<div class="panel-card"><dl class="legal-data">{% for rotulo,valor in dados %}<dt>{{rotulo}}</dt><dd>{{valor}}</dd>{% endfor %}</dl></div></div></section>{% endblock %}

@@ -1,0 +1,4 @@
+{% extends "gestao/base.html" %}{% block titulo %}{{titulo_legal}} • Doce Encanto{% endblock %}{% block conteudo %}
+<section class="section"><div class="container legal-page"><span class="eyebrow">Transparência</span><h1>{{titulo_legal}}</h1><p class="legal-lead">{{subtitulo_legal}}</p>
+<div class="legal-warning"><strong>Importante:</strong> esta é uma base de adequação do projeto. Para uso comercial, complete os dados reais e valide regras específicas com profissional jurídico quando necessário.</div>
+{% for titulo,texto in secoes %}<section class="legal-section"><h2>{{titulo}}</h2><p>{{texto}}</p></section>{% endfor %}<p class="muted">Última revisão: outubro de 2026.</p></div></section>{% endblock %}

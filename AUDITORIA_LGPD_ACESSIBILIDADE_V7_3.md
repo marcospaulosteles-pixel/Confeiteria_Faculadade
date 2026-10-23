@@ -1,0 +1,14 @@
+# Auditoria LGPD, jurídica e acessibilidade — V7.3
+- Tracking: nenhum Google Analytics, Meta Pixel ou tracker de terceiros foi encontrado. O projeto agora reserva um ponto de carregamento condicionado à preferência para analytics futuro.
+- Cookies: banner com opção “Somente necessários”, categoria opcional de analytics e reabertura pelo rodapé.
+- Minimização: endereço só é obrigatório para entrega; observações continuam opcionais.
+- Formulário: ciência obrigatória da Política de Privacidade, sem usar esse aceite como autorização de marketing.
+- Páginas criadas: Privacidade, Termos, Cancelamento/Reembolso e Dados Legais.
+- Dados legais: não inventados; configure LEGAL_NOME, LEGAL_DOCUMENTO, LEGAL_ENDERECO, LEGAL_CONTATO e LEGAL_EMAIL_PRIVACIDADE no Render.
+- Copyright: priorizar fotos próprias em gestao/static. Não publicar Pinterest/Google sem licença/autorização. Manter registro da origem de cada foto.
+- Avaliações: não havia módulo de depoimentos; nenhuma avaliação fictícia foi criada.
+- Promessas: evitar “100% garantido”, “melhor”, “zero risco”, prazos absolutos ou alegações sem prova.
+- Acessibilidade: skip link, foco visível, alt descritivo nas fotos de produto, controles nativos e banner de cookies operável por teclado.
+- Contraste: reforçados foco e blocos jurídicos; revalidar quando novas cores ou imagens forem adicionadas.
+- Pendências humanas: preencher dados reais do fornecedor; validar política comercial; registrar licenças das fotos; definir retenção dos pedidos; testar teclado, zoom 200%, leitor de tela e contraste com conteúdo final.
+- Esta revisão reduz riscos, mas não é parecer jurídico nem certificação formal de conformidade.

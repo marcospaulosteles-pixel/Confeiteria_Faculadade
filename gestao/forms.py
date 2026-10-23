@@ -6,6 +6,11 @@ from .models import Pedido, Ingrediente, Produto, Receita, Compra, Despesa, Conf
 
 
 class PedidoForm(forms.ModelForm):
+    aceite_privacidade=forms.BooleanField(
+        required=True,
+        label='Li o Aviso de Privacidade',
+        help_text='Seus dados serão usados para receber, organizar, confirmar e atender esta encomenda.'
+    )
     class Meta:
         model=Pedido
         fields=['cliente','telefone','data_entrega','entrega','endereco','complemento','observacoes']

@@ -9,4 +9,8 @@ urlpatterns=[
  path('gestao/configuracoes/',views.configuracoes,name='configuracoes'),
  path('gestao/estoque/',views.estoque,name='estoque'),path('gestao/estoque/novo/',views.novo_ingrediente,name='novo_ingrediente'),path('gestao/compras/nova/',views.nova_compra,name='nova_compra'),
  path('gestao/produtos/',views.produtos_gestao,name='produtos_gestao'),path('gestao/produtos/novo/',views.novo_produto,name='novo_produto'),path('gestao/financeiro/',views.financeiro,name='financeiro'),
+ path('privacidade/',views.politica_privacidade,name='politica_privacidade'),
+ path('reembolso/',views.politica_reembolso,name='politica_reembolso'),
+ path('termos/',views.termos_servico,name='termos_servico'),
+ path('dados-legais/',views.dados_legais,name='dados_legais'),
  path('bot/webhook/',views.bot_webhook,name='bot_webhook')]

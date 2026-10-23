@@ -365,3 +365,45 @@ def bot_webhook(request):
     except (ValueError,AttributeError): return JsonResponse({'erro':'JSON inválido'},status=400)
     resposta=bot.responder(texto,produtos=Produto.objects.filter(ativo=True),dias_antecedencia=settings.ANTECEDENCIA_MINIMA_DIAS,link_pedido=request.build_absolute_uri('/'),nome_loja=settings.NOME_LOJA)
     return JsonResponse({'resposta':resposta})
+
+
+def _pagina_legal(request, titulo, subtitulo, secoes):
+    return render(request, 'gestao/legal.html', {'titulo_legal':titulo,'subtitulo_legal':subtitulo,'secoes':secoes})
+
+def politica_privacidade(request):
+    return _pagina_legal(request,'Política de Privacidade','Como tratamos os dados pessoais usados para pedidos e atendimento.',[
+    ('1. Quem trata os dados','O responsável pelo tratamento é o fornecedor identificado na seção “Dados legais” deste site. Os canais informados ali também podem ser usados para dúvidas de privacidade.'),
+    ('2. Dados necessários','Para solicitar uma encomenda, coletamos nome, telefone/WhatsApp, data pretendida, modalidade de retirada ou entrega e detalhes do pedido. Endereço e complemento são solicitados somente quando a opção de entrega é escolhida. Observações são opcionais; evite inserir dados pessoais ou sensíveis desnecessários.'),
+    ('3. Finalidades','Usamos os dados para receber a solicitação, verificar agenda, entrar em contato, preparar e entregar a encomenda, manter histórico operacional e cumprir obrigações legais aplicáveis. O formulário não confirma automaticamente o pedido.'),
+    ('4. Base e minimização','Dados indispensáveis à encomenda são tratados para procedimentos relacionados ao pedido, execução da relação contratual e/ou cumprimento de obrigações aplicáveis, conforme o caso. O atendimento não é condicionado a consentimento para publicidade.'),
+    ('5. Compartilhamento','Os dados podem ser processados pelos provedores técnicos necessários à hospedagem e ao funcionamento do serviço. Não vendemos dados pessoais. Outros compartilhamentos devem ocorrer somente quando necessários, por obrigação legal ou com base jurídica adequada.'),
+    ('6. Cookies','Usamos cookies estritamente necessários à segurança e ao funcionamento, como sessão e proteção CSRF. Cookies opcionais de medição ou marketing não devem ser ativados antes da escolha do visitante. A preferência pode ser alterada pelo botão “Cookies” no rodapé.'),
+    ('7. Retenção e segurança','Os dados devem ser mantidos somente pelo período necessário às finalidades informadas e às obrigações legais. São adotadas medidas técnicas compatíveis com o serviço, embora nenhum sistema conectado à internet ofereça risco zero.'),
+    ('8. Direitos do titular','O titular pode solicitar informações e exercer os direitos previstos na LGPD pelos canais de “Dados legais”. Poderá ser necessária confirmação de identidade para proteger os próprios dados.'),
+    ('9. Atualizações','Esta política pode ser atualizada para refletir mudanças no serviço ou na legislação. A versão deve ser revisada com os dados reais do fornecedor antes do uso comercial.')
+    ])
+
+def politica_reembolso(request):
+    return _pagina_legal(request,'Política de cancelamento e reembolso','Regras transparentes para cancelamentos, alterações e valores pagos.',[
+    ('Antes da confirmação','O envio do formulário é uma solicitação e não gera cobrança nem confirmação automática. Enquanto o pedido não for confirmado, o cliente pode desistir da solicitação sem cobrança pelo site.'),
+    ('Após a confirmação','Condições de sinal, cancelamento, alteração de data e eventual retenção de valores devem ser informadas claramente antes do pagamento e considerar custos assumidos, estágio da produção e legislação de defesa do consumidor.'),
+    ('Compras à distância','Pedidos contratados fora do estabelecimento estão sujeitos às regras legais aplicáveis ao comércio eletrônico e ao direito de arrependimento. Produtos personalizados, perecíveis e encomendas para data específica podem exigir análise do caso concreto; esta política não pretende retirar direitos assegurados por lei.'),
+    ('Problemas com o pedido','Em caso de item incorreto, defeito, quantidade divergente ou descumprimento da oferta, use o canal de atendimento para análise e solução conforme a legislação aplicável.'),
+    ('Como solicitar','Informe o número ou nome do pedido, o telefone utilizado e o motivo. Não envie dados bancários sensíveis pelo formulário público.')
+    ])
+
+def termos_servico(request):
+    return _pagina_legal(request,'Termos de Serviço','Condições básicas de uso do site e solicitação de encomendas.',[
+    ('Uso do site','O cardápio e o formulário permitem solicitar encomendas e consultar informações. O usuário deve fornecer dados verdadeiros e suficientes para contato e execução do pedido.'),
+    ('Formação do pedido','O envio da solicitação não garante disponibilidade. A encomenda somente é confirmada após verificação da agenda, definição dos detalhes e confirmação expressa pelo atendimento.'),
+    ('Preços e entrega','Preços, composição, quantidades, taxa de entrega, prazo e forma de pagamento devem ser apresentados antes da confirmação. Personalizações devem ser registradas no atendimento.'),
+    ('Alergênicos','O cliente deve informar necessidades relevantes no atendimento. Ingredientes e possíveis alergênicos devem ser confirmados antes da contratação quando aplicável.'),
+    ('Propriedade intelectual','Textos, identidade visual e fotografias próprias não podem ser reutilizados comercialmente sem autorização. Imagens de terceiros somente devem ser publicadas com licença ou autorização compatível.'),
+    ('Responsabilidade','Informações promocionais devem ser objetivas e verificáveis. O site não deve prometer resultados, qualidade absoluta, disponibilidade ou prazos que não possam ser comprovados e cumpridos.'),
+    ('Legislação','Estes termos devem ser interpretados em conjunto com a legislação brasileira aplicável, especialmente normas de proteção do consumidor e de dados pessoais.')
+    ])
+
+def dados_legais(request):
+    from django.conf import settings
+    dados=[('Nome empresarial / responsável',settings.LEGAL_NOME),('CPF/CNPJ',settings.LEGAL_DOCUMENTO),('Endereço comercial',settings.LEGAL_ENDERECO),('Contato',settings.LEGAL_CONTATO),('E-mail de privacidade',settings.LEGAL_EMAIL_PRIVACIDADE)]
+    return render(request,'gestao/dados_legais.html',{'dados':dados})
