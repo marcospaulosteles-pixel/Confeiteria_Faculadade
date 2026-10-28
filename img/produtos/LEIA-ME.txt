@@ -1,0 +1,6 @@
+Coloque aqui as fotos próprias dos doces.
+Exemplo: brigadeiro.jpg
+No cadastro do produto, use em "Foto própria no projeto":
+gestao/img/produtos/brigadeiro.jpg
+
+Assim a foto fica dentro do projeto e não depende de Pinterest ou de URL externa.

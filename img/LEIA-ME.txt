@@ -1,0 +1,3 @@
+Coloque aqui a foto da confeitaria com o nome:  confeitaria.jpg
+(formato horizontal, ideal 1600x700 px ou maior, até ~300 KB).
+Enquanto o arquivo não existir, o banner mostra um fundo vinho com degradê.
