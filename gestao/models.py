@@ -20,9 +20,12 @@ class Ingrediente(models.Model):
 
 class Produto(models.Model):
     TIPOS=[('doce','Doce'),('kit','Combo / kit')]
+    FORMAS_VENDA=[('unidade','Por unidade'),('cento','Por cento (100 unidades)')]
     nome=models.CharField(max_length=120)
     descricao=models.TextField(blank=True)
     preco=models.DecimalField(max_digits=10,decimal_places=2)
+    forma_venda=models.CharField(max_length=10,choices=FORMAS_VENDA,default='unidade',help_text='Define se o preço informado vale por 1 unidade ou por 100 unidades.')
+    quantidade_minima=models.PositiveIntegerField(default=1,help_text='Quantidade mínima de doces aceita no pedido.')
     ativo=models.BooleanField(default=True)
     tipo=models.CharField(max_length=12,choices=TIPOS,default='doce')
     imagem_url=models.URLField('URL da imagem', max_length=500, blank=True, help_text='Opcional. Prefira imagem local para não depender de sites externos.')
@@ -33,7 +36,11 @@ class Produto(models.Model):
         if self.tipo == 'kit' and self.componentes.exists():
             return sum((x.produto.custo()*x.quantidade for x in self.componentes.select_related('produto')),Decimal('0'))
         return sum((r.quantidade*r.ingrediente.custo_unitario for r in self.receitas.select_related('ingrediente')),Decimal('0'))
-    def margem(self): return self.preco-self.custo()
+    @property
+    def quantidade_base_preco(self): return 100 if self.forma_venda == 'cento' else 1
+    @property
+    def rotulo_preco(self): return 'o cento' if self.forma_venda == 'cento' else 'unidade'
+    def margem(self): return self.preco-(self.custo()*Decimal(self.quantidade_base_preco))
 
 
 class KitItem(models.Model):
@@ -90,11 +97,16 @@ class ItemPedido(models.Model):
     produto=models.ForeignKey(Produto,on_delete=models.PROTECT)
     quantidade=models.PositiveIntegerField(default=1)
     preco_unitario=models.DecimalField(max_digits=10,decimal_places=2,null=True,blank=True)
+    quantidade_base_preco=models.PositiveIntegerField(default=1,help_text='Quantidade de unidades coberta pelo preço registrado (1 ou 100).')
     def save(self,*args,**kwargs):
         if self.preco_unitario is None: self.preco_unitario=self.produto.preco
+        if self._state.adding and self.quantidade_base_preco == 1: self.quantidade_base_preco=self.produto.quantidade_base_preco
         super().save(*args,**kwargs)
     @property
-    def subtotal(self): return (self.preco_unitario if self.preco_unitario is not None else self.produto.preco)*self.quantidade
+    def subtotal(self):
+        preco=self.preco_unitario if self.preco_unitario is not None else self.produto.preco
+        base=Decimal(self.quantidade_base_preco or self.produto.quantidade_base_preco or 1)
+        return (preco*Decimal(self.quantidade))/base
 
 
 class Despesa(models.Model):

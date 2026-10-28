@@ -36,7 +36,7 @@ def _real(valor):
 
 
 def _itens(pedido):
-    return "\n".join(f"• {i.quantidade}x {i.produto.nome}" for i in pedido.itens.all())
+    return "\n".join(f"• {i.quantidade} un. de {i.produto.nome}" for i in pedido.itens.all())
 
 
 def texto_pedido_para_loja(pedido):

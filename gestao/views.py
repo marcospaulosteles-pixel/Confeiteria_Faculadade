@@ -36,12 +36,18 @@ def cardapio(request):
         for p in produtos:
             try: q = int(request.POST.get(f'qtd_{p.id}') or 0)
             except ValueError: q = 0
-            if q > 0: quantidades[p] = q
+            if q > 0:
+                if q < p.quantidade_minima:
+                    form.add_error(None, f'{p.nome}: o pedido mínimo é de {p.quantidade_minima} unidades.')
+                elif p.forma_venda == 'cento' and q % 100 != 0:
+                    form.add_error(None, f'{p.nome}: vendido por cento; escolha 100, 200, 300... unidades.')
+                else:
+                    quantidades[p] = q
         if not quantidades: form.add_error(None, 'Escolha pelo menos um doce ou kit para fazer o pedido.')
         if form.is_valid() and quantidades:
             with transaction.atomic():
                 pedido = form.save(commit=False); pedido.origem='site'; _aplicar_taxa(pedido); pedido.save()
-                for p,q in quantidades.items(): ItemPedido.objects.create(pedido=pedido,produto=p,quantidade=q,preco_unitario=p.preco)
+                for p,q in quantidades.items(): ItemPedido.objects.create(pedido=pedido,produto=p,quantidade=q,preco_unitario=p.preco,quantidade_base_preco=p.quantidade_base_preco)
             request.session['ultimo_pedido']=pedido.pk
             return redirect('pedido_enviado')
     cfg=ConfiguracaoLoja.atual()
@@ -178,7 +184,7 @@ def painel(request):
         for item in pedido.itens.all():
             pid = item.produto_id
             preco = item.preco_unitario if item.preco_unitario is not None else item.produto.preco
-            receita_item = preco * item.quantidade
+            receita_item = item.subtotal
             info = produto_metricas.setdefault(pid, {
                 'id': pid, 'nome': item.produto.nome, 'qtd': 0, 'receita': Decimal('0')
             })

@@ -4,8 +4,8 @@ class ReceitaInline(admin.TabularInline): model=Receita; extra=1
 class KitItemInline(admin.TabularInline): model=KitItem; fk_name='kit'; extra=1
 @admin.register(Produto)
 class ProdutoAdmin(admin.ModelAdmin):
-    list_display=('nome','tipo','preco','ativo'); list_filter=('tipo','ativo'); inlines=[ReceitaInline,KitItemInline]
-class ItemInline(admin.TabularInline): model=ItemPedido; extra=0
+    list_display=('nome','tipo','preco','forma_venda','quantidade_minima','ativo'); list_filter=('tipo','forma_venda','ativo'); inlines=[ReceitaInline,KitItemInline]
+class ItemInline(admin.TabularInline): model=ItemPedido; extra=0; fields=('produto','quantidade','preco_unitario')
 @admin.register(Pedido)
 class PedidoAdmin(admin.ModelAdmin):
     list_display=('id','cliente','data_entrega','status','origem','entrega'); list_filter=('status','origem','entrega'); search_fields=('cliente','telefone'); inlines=[ItemInline]

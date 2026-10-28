@@ -53,8 +53,8 @@ class CompraForm(forms.ModelForm):
 class ProdutoRapidoForm(forms.ModelForm):
     rendimento=forms.IntegerField(min_value=1, initial=100, label='Rendimento de referência (unidades)', help_text='Para doces: ex. esta receita rende 100 brigadeiros. Kits podem ser montados depois no Admin.')
     class Meta:
-        model=Produto; fields=['nome','descricao','preco','tipo','imagem_local','imagem_url','ativo']
-        labels={'nome':'Nome','descricao':'Descrição para o cliente','preco':'Preço de venda (R$)','tipo':'Tipo','imagem_local':'Foto própria no projeto','imagem_url':'Foto externa (opcional)','ativo':'Mostrar no cardápio'}
+        model=Produto; fields=['nome','descricao','preco','forma_venda','quantidade_minima','tipo','imagem_local','imagem_url','ativo']
+        labels={'nome':'Nome','descricao':'Descrição para o cliente','preco':'Preço de venda (R$)','forma_venda':'Forma de venda','quantidade_minima':'Pedido mínimo (unidades)','tipo':'Tipo','imagem_local':'Foto própria no projeto','imagem_url':'Foto externa (opcional)','ativo':'Mostrar no cardápio'}
 
 class ReceitaLinhaForm(forms.Form):
     ingrediente=forms.ModelChoiceField(queryset=Ingrediente.objects.all().order_by('nome'), label='Ingrediente')
