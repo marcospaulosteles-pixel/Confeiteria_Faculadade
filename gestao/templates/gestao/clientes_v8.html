@@ -1,0 +1,13 @@
+{% extends "gestao/gestao_base.html" %}
+{% block titulo %}Clientes{% endblock %}
+{% block g_tag %}Relacionamento{% endblock %}
+{% block g_titulo %}Clientes e histórico de compras{% endblock %}
+{% block g_sub %}Uma visão parecida com um CRM: frequência, gasto acumulado, ticket médio e clientes que podem ser reativados.{% endblock %}
+{% block g_conteudo %}
+<form method="get" class="cartao"><label for="q">Buscar cliente</label><div class="busca-v8"><input id="q" name="q" value="{{ busca }}" placeholder="Nome ou WhatsApp"><button type="submit">Buscar</button></div></form>
+<div class="rolagem"><table><thead><tr><th>Cliente</th><th>Pedidos</th><th>Última encomenda</th><th>Total</th><th>Ticket médio</th><th>Relacionamento</th></tr></thead><tbody>
+{% for c in clientes %}<tr><td><strong>{{ c.nome }}</strong><br><small class="suave">{{ c.telefone }}</small></td><td>{{ c.pedidos }}</td><td>{{ c.ultima|date:"d/m/Y" }}</td><td>R$ {{ c.total|floatformat:2 }}</td><td>R$ {{ c.ticket|floatformat:2 }}</td><td>{% if c.inativo %}<span class="tag tag-reativar">Reativar</span>{% else %}<span class="tag">Ativo</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="6">Nenhum cliente encontrado.</td></tr>{% endfor %}
+</tbody></table></div>
+<div class="aviso"><strong>Como usar esta tela:</strong> clientes marcados como “Reativar” estão há mais de 90 dias sem uma encomenda registrada. Use apenas contatos promocionais quando houver base legal/consentimento adequado; para atendimento de pedidos, mantenha a comunicação operacional.</div>
+<style>.busca-v8{display:flex;gap:10px}.busca-v8 input{flex:1}.busca-v8 button{white-space:nowrap}.tag-reativar{background:#fff3d8;color:#704d00}</style>
+{% endblock %}

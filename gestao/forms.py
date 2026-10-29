@@ -68,3 +68,11 @@ class ConfiguracaoLojaForm(forms.ModelForm):
     class Meta:
         model=ConfiguracaoLoja; fields=['limite_encomendas_dia','taxa_entrega']
         labels={'limite_encomendas_dia':'Máximo de encomendas por dia','taxa_entrega':'Taxa padrão de entrega (R$)'}
+
+
+class PagamentoPedidoForm(forms.ModelForm):
+    class Meta:
+        model=Pedido
+        fields=['valor_pago','forma_pagamento']
+        labels={'valor_pago':'Total já recebido (R$)','forma_pagamento':'Forma de pagamento'}
+        widgets={'valor_pago':forms.NumberInput(attrs={'step':'0.01','min':'0'})}

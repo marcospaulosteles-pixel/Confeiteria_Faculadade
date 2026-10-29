@@ -1,0 +1,12 @@
+{% extends "gestao/gestao_base.html" %}
+{% block titulo %}Relatórios{% endblock %}
+{% block g_tag %}Inteligência do negócio{% endblock %}
+{% block g_titulo %}Números para decidir melhor{% endblock %}
+{% block g_sub %}Resumo dos últimos 90 dias com faturamento, ticket médio, produtos que mais vendem e origem dos pedidos.{% endblock %}
+{% block g_conteudo %}
+<div class="grade-admin"><div class="kpi">Faturamento do período<b>R$ {{ receita|floatformat:2 }}</b><small>{{ inicio|date:"d/m/Y" }} a {{ hoje|date:"d/m/Y" }}</small></div><div class="kpi">Pedidos<b>{{ qtd }}</b><small>cancelados não entram</small></div><div class="kpi">Ticket médio<b>R$ {{ ticket|floatformat:2 }}</b><small>valor médio por pedido</small></div></div>
+<h2>Produtos com maior receita</h2><div class="rolagem"><table><thead><tr><th>Produto</th><th>Quantidade</th><th>Receita</th></tr></thead><tbody>{% for r in ranking %}<tr><td><strong>{{ r.nome }}</strong></td><td>{{ r.qtd }}</td><td>R$ {{ r.receita|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="3">Ainda não há dados suficientes.</td></tr>{% endfor %}</tbody></table></div>
+<div class="duas-colunas-v8"><div><h2>Origem dos pedidos</h2><div class="cartao">{% for x in por_origem %}<p><strong>{{ x.origem|capfirst }}</strong> <span class="suave">· {{ x.qtd }} pedido{{ x.qtd|pluralize }}</span></p>{% empty %}<p class="suave">Sem dados.</p>{% endfor %}</div></div><div><h2>Status operacional</h2><div class="cartao">{% for x in por_status %}<p><strong>{{ x.status|capfirst }}</strong> <span class="suave">· {{ x.qtd }} pedido{{ x.qtd|pluralize }}</span></p>{% empty %}<p class="suave">Sem dados.</p>{% endfor %}</div></div></div>
+<p><a class="botao sec" href="{% url 'exportar_csv' %}">Exportar pedidos em CSV</a><a class="botao sec" href="{% url 'exportar_pdf' %}">Gerar relatório PDF</a></p>
+<style>.duas-colunas-v8{display:grid;grid-template-columns:1fr 1fr;gap:18px}@media(max-width:760px){.duas-colunas-v8{grid-template-columns:1fr}}</style>
+{% endblock %}

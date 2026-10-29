@@ -1,0 +1,21 @@
+{% extends "gestao/gestao_base.html" %}
+{% block titulo %}Agenda de encomendas{% endblock %}
+{% block g_tag %}Agenda de produção{% endblock %}
+{% block g_titulo %}Encomendas dos próximos dias{% endblock %}
+{% block g_sub %}Veja a ocupação da agenda, os pedidos de cada data e os dias próximos do limite de produção.{% endblock %}
+{% block g_conteudo %}
+<div class="grade-admin">
+  <div class="kpi">Limite diário<b>{{ cfg.limite_encomendas_dia }}</b><small>encomendas por data</small></div>
+  <div class="kpi">Janela exibida<b>31 dias</b><small>a partir de hoje</small></div>
+</div>
+<h2>Calendário operacional</h2>
+<div class="agenda-v8">
+{% for d in dias %}
+  <section class="cartao {% if d.lotado %}dia-lotado{% endif %}">
+    <div class="linha-titulo"><div><strong>{{ d.data|date:"l, d/m"|capfirst }}</strong><br><small class="suave">{{ d.ocupacao }} de {{ d.limite }} vagas usadas</small></div><span class="tag">{% if d.lotado %}Lotado{% elif d.ocupacao %}{{ d.ocupacao }} pedido{{ d.ocupacao|pluralize }}{% else %}Livre{% endif %}</span></div>
+    {% for p in d.pedidos %}<div class="pedido-mini"><div><strong>#{{ p.id }} · {{ p.cliente }}</strong><small>{{ p.get_status_display }} · {{ p.get_entrega_display }}</small></div><div><b>R$ {{ p.total|floatformat:2 }}</b><a href="/producao/">Abrir</a></div></div>{% empty %}<p class="suave">Nenhuma encomenda nesta data.</p>{% endfor %}
+  </section>
+{% endfor %}
+</div>
+<style>.agenda-v8{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}.agenda-v8 .cartao{margin:0}.linha-titulo,.pedido-mini{display:flex;justify-content:space-between;gap:16px;align-items:center}.pedido-mini{border-top:1px solid var(--line);padding:12px 0}.pedido-mini:first-of-type{margin-top:12px}.pedido-mini small,.pedido-mini a{display:block}.pedido-mini>div:last-child{text-align:right}.dia-lotado{border-color:#d7a7af;background:#fff9fa}</style>
+{% endblock %}

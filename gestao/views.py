@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db import transaction
-from django.db.models import Sum, Q, F, DecimalField, ExpressionWrapper
+from django.db.models import Sum, Q, F, DecimalField, ExpressionWrapper, Count, Max
 from django.db.models.functions import TruncMonth
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -18,9 +18,9 @@ from django.views.decorators.http import require_POST
 
 from . import bot, services, whatsapp
 from .forms import (PedidoForm, PedidoManualForm, IngredienteForm, CompraForm,
-                    ProdutoRapidoForm, DespesaForm, ConfiguracaoLojaForm)
+                    ProdutoRapidoForm, DespesaForm, ConfiguracaoLojaForm, PagamentoPedidoForm)
 from .models import (Ingrediente, ItemPedido, Pedido, Produto, Compra, Despesa,
-                     Receita, ConfiguracaoLoja)
+                     Receita, ConfiguracaoLoja, MovimentoEstoque)
 
 
 def _aplicar_taxa(pedido):
@@ -333,7 +333,7 @@ def nova_compra(request):
         with transaction.atomic():
             compra=form.save(); ing=compra.ingrediente; anterior=ing.quantidade; novo=compra.quantidade
             if anterior+novo>0: ing.custo_unitario=((anterior*ing.custo_unitario)+compra.valor_total)/(anterior+novo)
-            ing.quantidade=anterior+novo; ing.save(update_fields=['quantidade','custo_unitario'])
+            ing.quantidade=anterior+novo; ing.save(update_fields=['quantidade','custo_unitario']); MovimentoEstoque.objects.create(ingrediente=ing,tipo='entrada',quantidade=novo,descricao='Compra registrada',compra=compra)
         messages.success(request,f'Compra registrada. Estoque de {ing.nome} atualizado.'); return redirect('estoque')
     return render(request,'gestao/form_simples.html',{'form':form,'titulo':'Registrar compra','subtitulo':'Informe o ingrediente, a quantidade e o total pago.','botao':'Registrar entrada'})
 
@@ -360,7 +360,65 @@ def novo_produto(request):
 def financeiro(request):
     hoje=date.today(); form=DespesaForm(request.POST or None)
     if request.method=='POST' and form.is_valid(): form.save(); messages.success(request,'Despesa registrada.'); return redirect('financeiro')
-    return render(request,'gestao/financeiro.html',{'fin':services.resumo_financeiro(hoje.year,hoje.month),'form':form,'despesas':Despesa.objects.order_by('-data')[:15]})
+    pedidos_mes=Pedido.objects.filter(data_entrega__year=hoje.year,data_entrega__month=hoje.month).exclude(status='cancelado').prefetch_related('itens__produto')
+    previsto=sum((p.total for p in pedidos_mes),Decimal('0'))
+    recebido=sum((min(p.valor_pago or Decimal('0'),p.total) for p in pedidos_mes),Decimal('0'))
+    a_receber=max(previsto-recebido,Decimal('0'))
+    return render(request,'gestao/financeiro.html',{'fin':services.resumo_financeiro(hoje.year,hoje.month),'form':form,'despesas':Despesa.objects.order_by('-data')[:15],'pedidos_mes':pedidos_mes.order_by('data_entrega'),'previsto':previsto,'recebido':recebido,'a_receber':a_receber})
+
+@staff_member_required
+@require_POST
+def atualizar_pagamento(request, pk):
+    pedido=get_object_or_404(Pedido,pk=pk)
+    form=PagamentoPedidoForm(request.POST,instance=pedido)
+    if form.is_valid():
+        form.save(); messages.success(request,f'Pagamento do pedido #{pedido.pk} atualizado.')
+    else:
+        messages.error(request,'Não foi possível atualizar o pagamento.')
+    return redirect(request.POST.get('next') or 'financeiro')
+
+@staff_member_required
+def agenda_encomendas(request):
+    hoje=date.today(); dias=[]; cfg=ConfiguracaoLoja.atual()
+    for offset in range(0,31):
+        dia=hoje+timedelta(days=offset)
+        pedidos=list(Pedido.objects.filter(data_entrega=dia).exclude(status='cancelado').prefetch_related('itens__produto').order_by('id'))
+        if pedidos or offset < 8:
+            dias.append({'data':dia,'pedidos':pedidos,'ocupacao':len(pedidos),'limite':cfg.limite_encomendas_dia,'lotado':len(pedidos)>=cfg.limite_encomendas_dia})
+    return render(request,'gestao/agenda_v8.html',{'dias':dias,'cfg':cfg,'hoje':hoje})
+
+@staff_member_required
+def clientes(request):
+    busca=(request.GET.get('q') or '').strip()
+    qs=Pedido.objects.exclude(status='cancelado')
+    if busca: qs=qs.filter(Q(cliente__icontains=busca)|Q(telefone__icontains=busca))
+    dados=qs.values('telefone').annotate(nome=Max('cliente'),pedidos=Count('id'),ultima=Max('data_entrega')).order_by('-ultima')
+    clientes=[]
+    for d in dados:
+        ps=Pedido.objects.filter(telefone=d['telefone']).exclude(status='cancelado').prefetch_related('itens__produto')
+        total=sum((p.total for p in ps),Decimal('0'))
+        clientes.append({**d,'total':total,'ticket':(total/Decimal(d['pedidos'])) if d['pedidos'] else Decimal('0'),'inativo':bool(d['ultima'] and d['ultima'] < date.today()-timedelta(days=90))})
+    return render(request,'gestao/clientes_v8.html',{'clientes':clientes,'busca':busca})
+
+@staff_member_required
+def relatorios_v8(request):
+    hoje=date.today(); inicio=hoje-timedelta(days=90)
+    pedidos=Pedido.objects.filter(data_entrega__gte=inicio).exclude(status='cancelado').prefetch_related('itens__produto')
+    receita=sum((p.total for p in pedidos),Decimal('0'))
+    ranking={}
+    for p in pedidos:
+        for item in p.itens.all():
+            r=ranking.setdefault(item.produto.nome,{'qtd':0,'receita':Decimal('0')})
+            r['qtd']+=item.quantidade; r['receita']+=item.subtotal
+    ranking=sorted(({'nome':k,**v} for k,v in ranking.items()),key=lambda x:x['receita'],reverse=True)
+    por_origem=pedidos.values('origem').annotate(qtd=Count('id')).order_by('-qtd')
+    por_status=pedidos.values('status').annotate(qtd=Count('id')).order_by('-qtd')
+    return render(request,'gestao/relatorios_v8.html',{'inicio':inicio,'hoje':hoje,'receita':receita,'qtd':pedidos.count(),'ticket':(receita/Decimal(pedidos.count())) if pedidos.count() else Decimal('0'),'ranking':ranking[:10],'por_origem':por_origem,'por_status':por_status})
+
+@staff_member_required
+def movimentacoes_estoque(request):
+    movimentos=MovimentoEstoque.objects.select_related('ingrediente','pedido','compra').order_by('-criado_em')[:300]
+    return render(request,'gestao/movimentacoes_estoque_v8.html',{'movimentos':movimentos})
 
 
 @csrf_exempt

@@ -3,6 +3,7 @@
 {% block g_titulo %}Estoque{% endblock %}
 {% block g_sub %}Você não precisa fazer contas: registre as compras e o sistema soma as quantidades e recalcula o custo médio.{% endblock %}
 {% block g_conteudo %}
+<p><a class="botao" href="{% url 'nova_compra' %}">Registrar compra</a><a class="botao sec" href="{% url 'movimentacoes_estoque' %}">Ver movimentações</a></p>
 <p><a class="botao" href="/gestao/compras/nova/">+ Registrar compra</a> <a class="botao sec" href="/gestao/estoque/novo/">+ Novo ingrediente</a></p>
 <div class="rolagem"><table><tr><th>Ingrediente</th><th>Tenho</th><th>Custo médio</th><th>Validade</th><th>Situação</th></tr>{% for i in ingredientes %}<tr><td><strong>{{ i.nome }}</strong></td><td>{{ i.quantidade }} {{ i.unidade }}</td><td>R$ {{ i.custo_unitario|floatformat:4 }}/{{ i.unidade }}</td><td>{{ i.validade|date:"d/m/Y"|default:"—" }}</td><td>{% if i.estoque_baixo %}⚠️ Comprar{% else %}✓ OK{% endif %}</td></tr>{% empty %}<tr><td colspan="5">Cadastre seu primeiro ingrediente.</td></tr>{% endfor %}</table></div>
 <div class="aviso"><strong>Como funciona?</strong> Ao registrar uma compra, o estoque aumenta. Quando você marca um pedido como produzido, os ingredientes da receita são baixados automaticamente.</div>

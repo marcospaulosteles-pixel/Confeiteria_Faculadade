@@ -33,3 +33,7 @@ Entre em /admin/, cadastre Ingredientes, Produtos e as receitas de cada produto.
 
 ## Observação
 O arquivo original não continha todos os componentes importados (models.py, services.py, bot.py, settings.py, urls.py etc.). Esses arquivos foram implementados para tornar o projeto executável, mantendo as telas e o fluxo presentes no código enviado.
+
+
+## Versão 8
+Veja `ATUALIZACAO_V8.md` para os módulos de gestão integrada.

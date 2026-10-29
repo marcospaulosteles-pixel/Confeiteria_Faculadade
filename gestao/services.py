@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.db import transaction
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
-from .models import Despesa,ItemPedido,Pedido
+from .models import Despesa,ItemPedido,Pedido,MovimentoEstoque
 
 class EstoqueInsuficiente(Exception): pass
 
@@ -43,5 +43,7 @@ def lista_de_compras(pedidos):
 def produzir(pedido):
     req=necessidades([pedido]); faltas=[f'{i.nome}: faltam {q-i.quantidade} {i.unidade}' for i,q in req.items() if q>i.quantidade]
     if faltas: raise EstoqueInsuficiente('; '.join(faltas))
-    for ing,q in req.items(): ing.quantidade-=q; ing.save(update_fields=['quantidade'])
+    for ing,q in req.items():
+        ing.quantidade-=q; ing.save(update_fields=['quantidade'])
+        MovimentoEstoque.objects.create(ingrediente=ing,tipo='saida',quantidade=q,descricao=f'Produção do pedido #{pedido.pk}',pedido=pedido)
     pedido.status='produzido'; pedido.save(update_fields=['status'])

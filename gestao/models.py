@@ -85,11 +85,21 @@ class Pedido(models.Model):
     origem=models.CharField(max_length=20,choices=ORIGEM,default='site')
     token_acompanhamento=models.UUIDField(default=uuid.uuid4,editable=False,unique=True)
     criado_em=models.DateTimeField(auto_now_add=True)
+    FORMAS_PAGAMENTO=[('nao_informado','Não informado'),('pix','PIX'),('dinheiro','Dinheiro'),('cartao','Cartão'),('outro','Outro')]
+    valor_pago=models.DecimalField(max_digits=10,decimal_places=2,default=0)
+    forma_pagamento=models.CharField(max_length=20,choices=FORMAS_PAGAMENTO,default='nao_informado')
     def __str__(self): return f'#{self.pk} - {self.cliente}'
     @property
     def subtotal_produtos(self): return sum((i.subtotal for i in self.itens.select_related('produto')),Decimal('0'))
     @property
     def total(self): return self.subtotal_produtos + (self.taxa_entrega or Decimal('0'))
+    @property
+    def saldo(self): return max(self.total-(self.valor_pago or Decimal('0')), Decimal('0'))
+    @property
+    def status_pagamento(self):
+        if (self.valor_pago or Decimal('0')) <= 0: return 'Pendente'
+        if (self.valor_pago or Decimal('0')) >= self.total: return 'Pago'
+        return 'Parcial'
 
 
 class ItemPedido(models.Model):
@@ -121,3 +131,15 @@ class Compra(models.Model):
     data=models.DateField(auto_now_add=True)
     criado_em=models.DateTimeField(auto_now_add=True)
     def __str__(self): return f'{self.ingrediente} - {self.quantidade} {self.ingrediente.unidade}'
+
+
+class MovimentoEstoque(models.Model):
+    TIPOS=[('entrada','Entrada'),('saida','Saída'),('ajuste','Ajuste')]
+    ingrediente=models.ForeignKey(Ingrediente,on_delete=models.PROTECT,related_name='movimentacoes')
+    tipo=models.CharField(max_length=10,choices=TIPOS)
+    quantidade=models.DecimalField(max_digits=12,decimal_places=3)
+    descricao=models.CharField(max_length=180,blank=True)
+    pedido=models.ForeignKey(Pedido,on_delete=models.SET_NULL,null=True,blank=True,related_name='movimentos_estoque')
+    compra=models.ForeignKey(Compra,on_delete=models.SET_NULL,null=True,blank=True,related_name='movimentos_estoque')
+    criado_em=models.DateTimeField(auto_now_add=True)
+    def __str__(self): return f'{self.get_tipo_display()} - {self.ingrediente.nome} - {self.quantidade}'

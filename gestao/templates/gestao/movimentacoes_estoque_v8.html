@@ -1,0 +1,9 @@
+{% extends "gestao/gestao_base.html" %}
+{% block titulo %}Movimentações de estoque{% endblock %}
+{% block g_tag %}Auditoria do estoque{% endblock %}
+{% block g_titulo %}Tudo o que entrou e saiu{% endblock %}
+{% block g_sub %}Compras registradas geram entradas e pedidos produzidos geram saídas, criando rastreabilidade dos ingredientes.{% endblock %}
+{% block g_conteudo %}
+<p><a class="botao" href="{% url 'nova_compra' %}">Registrar compra</a><a class="botao sec" href="{% url 'estoque' %}">Voltar ao estoque</a></p>
+<div class="rolagem"><table><thead><tr><th>Data</th><th>Ingrediente</th><th>Movimento</th><th>Quantidade</th><th>Referência</th></tr></thead><tbody>{% for m in movimentos %}<tr><td>{{ m.criado_em|date:"d/m/Y H:i" }}</td><td><strong>{{ m.ingrediente.nome }}</strong></td><td><span class="tag">{{ m.get_tipo_display }}</span></td><td>{{ m.quantidade }} {{ m.ingrediente.unidade }}</td><td>{{ m.descricao }}{% if m.pedido %} · pedido #{{ m.pedido_id }}{% endif %}</td></tr>{% empty %}<tr><td colspan="5">As próximas compras e produções passarão a aparecer aqui.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

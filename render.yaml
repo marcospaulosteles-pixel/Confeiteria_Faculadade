@@ -10,7 +10,8 @@ services:
     runtime: python
     plan: free
     buildCommand: ./build.sh
-    startCommand: gunicorn config.wsgi:application
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    healthCheckPath: /health/
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -22,15 +23,29 @@ services:
         value: "False"
       - key: NOME_LOJA
         value: "Doces feitos com amor"
-      - key: WHATSAPP_LOJA
-        sync: false
       - key: NOME_MARCA
         value: "Doce Encanto"
+      - key: WHATSAPP_LOJA
+        sync: false
       - key: ANTECEDENCIA_MINIMA_DIAS
         value: "3"
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false
       - key: DJANGO_SUPERUSER_USERNAME
         sync: false
       - key: DJANGO_SUPERUSER_PASSWORD
         sync: false
       - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
+      - key: LEGAL_NOME
+        sync: false
+      - key: LEGAL_DOCUMENTO
+        sync: false
+      - key: LEGAL_ENDERECO
+        sync: false
+      - key: LEGAL_CONTATO
+        sync: false
+      - key: LEGAL_EMAIL_PRIVACIDADE
         sync: false
