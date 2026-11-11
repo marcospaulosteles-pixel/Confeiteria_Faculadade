@@ -113,14 +113,73 @@ main{min-height:50vh}
 @media(min-width:851px) and (max-width:1400px){.hero h1{font-size:clamp(2rem,3vw,3.15rem)}.hero-copy{padding-left:clamp(30px,7vw,110px)}.hero-copy:after{display:none}}
 @media(max-width:850px){.hero-grid{grid-template-columns:minmax(0,1fr)}.hero-copy{padding:38px 28px}.hero h1{font-size:clamp(2.35rem,6vw,3.6rem);max-width:650px}.category-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero-art{height:340px;min-height:340px!important}}
 @media(max-width:540px){.hero h1{font-size:clamp(2.15rem,9vw,3rem)}.hero-copy{padding:34px 22px}.category-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.category-grid .category-tile span{font-size:.82rem;padding:18px 8px 8px}.hero-art{height:270px;min-height:270px!important}#cardapio,#categorias,#pedido{scroll-margin-top:155px}}
+
+/* V9.2 - Ajustes para telas pequenas; não altera a gestão nem os formulários. */
+.mobile-menu-toggle{display:none}
+.category-grid .category-tile img{object-position:center center}
+.category-grid .category-tile span{background:linear-gradient(0deg,rgba(40,20,15,.95),rgba(40,20,15,.65) 65%,transparent);min-height:43px;display:flex;align-items:flex-end;z-index:2}
+.wa-float{width:52px;height:52px;right:14px;bottom:16px;padding:0;box-shadow:0 6px 18px rgba(0,0,0,.2)}
+.wa-float b{font-size:1.3rem!important}
+@media(max-width:850px){
+ .site-header{position:sticky;top:0;z-index:25}
+ .site-header .nav{min-height:70px;display:flex;flex-wrap:nowrap;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;position:relative}
+ .site-header .brand{display:flex;min-width:0;flex-direction:column;flex:0 1 auto;align-items:flex-start}
+ .site-header .brand-script{font-size:clamp(1.75rem,6vw,2.4rem);line-height:1}
+ .site-header .brand-sub{font-size:.65rem}.site-header .brand-flourish{display:none}
+ .mobile-menu-toggle{display:inline-flex;align-items:center;gap:9px;border:1px solid #ffffff55;background:#f6d0d3;color:#4c281e;padding:9px 14px;border-radius:12px;font-size:.93rem;flex-shrink:0}
+ .mobile-menu-toggle:focus-visible{outline:3px solid #f5a1b6;outline-offset:3px}
+ .site-header .nav-links{display:none;position:absolute;top:calc(100% - 1px);left:0;right:0;width:100%;margin:0;background:#51291b;padding:12px;border:1px solid #765044;box-shadow:0 12px 22px #2a1b1933;border-radius:0 0 17px 17px;flex-direction:column;align-items:stretch;gap:5px;z-index:50}
+ .site-header .nav-links.is-open{display:flex}
+ .site-header .nav-links a,.site-header .nav-links a:not(.nav-cta){display:flex;align-items:center;min-height:44px;padding:11px 14px;font-size:.96rem;border-radius:10px;white-space:normal}
+ .site-header .nav-links .nav-cta{margin-left:0;justify-content:center;background:#f7cfce;color:#51291b!important}
+ .hero{overflow:hidden}
+ .hero-grid{grid-template-columns:minmax(0,1fr)}
+ .hero-copy{padding:34px max(22px,5vw) 30px;overflow:visible}
+ .hero-copy:after{display:none}
+ .hero h1{font-size:clamp(2rem,7.7vw,3.35rem);line-height:1.06;letter-spacing:-.035em;overflow-wrap:break-word;hyphens:auto;max-width:100%;margin:14px 0 18px}
+ .hero h1 em{font-size:.95em;overflow-wrap:anywhere}
+ .hero p{font-size:1rem;line-height:1.5;margin:0}
+ .hero-actions{margin-top:22px}
+ .hero-actions .btn{min-height:49px}
+ .hero-art{height:clamp(220px,54vw,340px);min-height:0!important;border-radius:0}
+ .benefits .container{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .category-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .category-grid .category-tile{aspect-ratio:1.58;min-height:100px}
+ .category-grid .category-tile span{font-size:.88rem;padding:15px 10px 10px}
+ #categorias,#cardapio,#pedido{scroll-margin-top:88px}
+ .category-section{padding:25px 0 18px}
+ .category-head h2{font-size:clamp(1.9rem,6vw,2.55rem)}
+ .section-head p{font-size:.95rem}
+ .wa-float{width:49px;height:49px;bottom:14px;right:12px}
+}
+@media(max-width:400px){
+ .hero h1{font-size:clamp(1.98rem,8vw,2.5rem)}
+ .category-grid{gap:10px}
+ .category-grid .category-tile{aspect-ratio:1.45}
+ .category-grid .category-tile span{font-size:.78rem;padding:14px 7px 8px}
+ .hero-copy{padding:28px 19px}
+}
+@media(prefers-reduced-motion:reduce){.category-grid .category-tile img{transition:none}.category-grid .category-tile:hover img{transform:none}}
 </style>
 {% block extra_head %}{% endblock %}
 </head><body><a class="skip-link" href="#conteudo-principal">Pular para o conteúdo principal</a>
 {% if user.is_staff %}{% with p=request.path %}<div class="admin-nav"><div class="container"><strong>Gestão</strong><a href="/gestao/"{% if p == '/gestao/' %} class="on"{% endif %}>Central</a><a href="/gestao/agenda/"{% if '/gestao/agenda/' in p %} class="on"{% endif %}>Agenda</a><a href="/producao/"{% if p == '/producao/' %} class="on"{% endif %}>Pedidos</a><a href="/gestao/clientes/"{% if '/gestao/clientes/' in p %} class="on"{% endif %}>Clientes</a><a href="/gestao/produtos/"{% if '/gestao/produtos' in p %} class="on"{% endif %}>Produtos</a><a href="/gestao/estoque/"{% if '/gestao/estoque' in p or '/gestao/compras' in p %} class="on"{% endif %}>Estoque</a><a href="/gestao/financeiro/"{% if '/gestao/financeiro' in p %} class="on"{% endif %}>Financeiro</a><a href="/gestao/relatorios/"{% if '/gestao/relatorios/' in p %} class="on"{% endif %}>Relatórios</a><a href="/gestao/pedidos/historico/"{% if '/gestao/pedidos/' in p %} class="on"{% endif %}>Histórico</a><a href="/gestao/configuracoes/"{% if '/gestao/configuracoes' in p %} class="on"{% endif %}>Config.</a><a href="/admin/">Cadastros</a><a href="/">Ver site</a></div></div>{% endwith %}{% endif %}
-<header class="site-header"><div class="container nav"><a class="brand" href="/" aria-label="D.Chiica — página inicial"><span class="brand-script">D.Chiica</span><span class="brand-sub">Confeitaria Artesanal</span><span class="brand-flourish">♡ ───── ♡</span></a><nav class="nav-links" aria-label="Navegação principal"><a class="nav-home" href="/">⌂ <span>Início</span></a><a href="/#categorias">♧ <span>Cardápio</span></a><a href="/#pedido">▦ <span>Encomendas</span></a><a href="/#sobre">ⓘ <span>Sobre</span></a><a class="nav-cta" href="/gestao/">▥ <span>Gestão</span></a></nav></div></header>
+<header class="site-header"><div class="container nav"><a class="brand" href="/" aria-label="D.Chiica — página inicial"><span class="brand-script">D.Chiica</span><span class="brand-sub">Confeitaria Artesanal</span><span class="brand-flourish">♡ ───── ♡</span></a><button type="button" class="mobile-menu-toggle" aria-expanded="false" aria-controls="site-navigation" aria-label="Abrir menu de navegação"><span aria-hidden="true">☰</span><span class="mobile-menu-label">Menu</span></button><nav id="site-navigation" class="nav-links" aria-label="Navegação principal"><a class="nav-home" href="/">⌂ <span>Início</span></a><a href="/#categorias">♧ <span>Cardápio</span></a><a href="/#pedido">▦ <span>Encomendas</span></a><a href="/#sobre">ⓘ <span>Sobre</span></a><a class="nav-cta" href="/gestao/">▥ <span>Gestão</span></a></nav></div></header>
 {% for m in messages %}<div class="container" style="margin-top:16px"><div class="{% if m.tags == 'error' %}alert{% else %}success{% endif %}">{{m}}</div></div>{% endfor %}
 {% block conteudo %}{% endblock %}
 <footer class="legal-footer"><div class="container"><div><strong>D.Chiica</strong><p>Doces artesanais para momentos especiais.</p><small>© 2026 D.Chiica. Imagens ilustrativas e fotografias dos produtos, quando disponíveis.</small></div><nav class="legal-links" aria-label="Informações legais"><a href="{% url 'politica_privacidade' %}">Privacidade</a><a href="{% url 'termos_servico' %}">Termos</a><a href="{% url 'politica_reembolso' %}">Cancelamento e reembolso</a><a href="{% url 'dados_legais' %}">Dados legais</a><button type="button" class="cookie-link" id="open-cookie-settings" style="background:none;color:inherit;padding:0;border:0;border-radius:0">Cookies</button></nav></div></footer>
 {% if WHATSAPP_LINK and "/gestao/" not in request.path and "/producao/" not in request.path and "/painel/" not in request.path and "/enviado/" not in request.path %}<a class="wa-float" href="{{ WHATSAPP_LINK }}" target="_blank" rel="noopener" aria-label="Falar pelo WhatsApp"><b aria-hidden="true" style="font-size:1.3rem;line-height:1">💬</b><span class="wa-txt">WhatsApp</span></a>{% endif %}
 <div class="cookie-banner" id="cookie-banner" role="dialog" aria-labelledby="cookie-title" hidden><strong id="cookie-title">Preferências de cookies</strong><p>Usamos cookies necessários para segurança e funcionamento. Cookies opcionais de medição só podem ser ativados com sua escolha.</p><div class="cookie-settings"><label><input type="checkbox" checked disabled> Necessários — sempre ativos</label><label><input type="checkbox" id="cookie-analytics"> Medição/analytics — opcional</label></div><div class="cookie-actions"><button type="button" id="cookie-accept" class="cookie-secondary">Aceitar selecionados</button><button type="button" id="cookie-reject" class="cookie-necessary">Somente necessários</button></div></div>
-<script>(function(){const K='doce_encanto_cookie_preferences_v1',b=document.getElementById('cookie-banner'),a=document.getElementById('cookie-analytics');function r(){try{return JSON.parse(localStorage.getItem(K)||'null')}catch(e){return null}}function apply(ok){/* Tracking revisado: nenhum tracker de terceiros é carregado por padrão. Se analytics for adicionado, carregue-o SOMENTE aqui quando ok=true. */document.documentElement.dataset.analyticsConsent=ok?'granted':'denied'}function save(ok){localStorage.setItem(K,JSON.stringify({necessary:true,analytics:!!ok,updated:new Date().toISOString()}));b.hidden=true;apply(!!ok)}const p=r();if(p){a.checked=!!p.analytics;apply(!!p.analytics)}else b.hidden=false;document.getElementById('cookie-accept').addEventListener('click',()=>save(a.checked));document.getElementById('cookie-reject').addEventListener('click',()=>{a.checked=false;save(false)});document.getElementById('open-cookie-settings').addEventListener('click',()=>{const p=r();a.checked=!!(p&&p.analytics);b.hidden=false;b.querySelector('button').focus()})})();</script></body></html>
+<script>(function(){const K='doce_encanto_cookie_preferences_v1',b=document.getElementById('cookie-banner'),a=document.getElementById('cookie-analytics');function r(){try{return JSON.parse(localStorage.getItem(K)||'null')}catch(e){return null}}function apply(ok){/* Tracking revisado: nenhum tracker de terceiros é carregado por padrão. Se analytics for adicionado, carregue-o SOMENTE aqui quando ok=true. */document.documentElement.dataset.analyticsConsent=ok?'granted':'denied'}function save(ok){localStorage.setItem(K,JSON.stringify({necessary:true,analytics:!!ok,updated:new Date().toISOString()}));b.hidden=true;apply(!!ok)}const p=r();if(p){a.checked=!!p.analytics;apply(!!p.analytics)}else b.hidden=false;document.getElementById('cookie-accept').addEventListener('click',()=>save(a.checked));document.getElementById('cookie-reject').addEventListener('click',()=>{a.checked=false;save(false)});document.getElementById('open-cookie-settings').addEventListener('click',()=>{const p=r();a.checked=!!(p&&p.analytics);b.hidden=false;b.querySelector('button').focus()})})();</script><script>
+(function(){
+ const toggle=document.querySelector('.mobile-menu-toggle');
+ const nav=document.getElementById('site-navigation');
+ if(!toggle||!nav)return;
+ function setOpen(open){nav.classList.toggle('is-open',open);toggle.setAttribute('aria-expanded',String(open));toggle.setAttribute('aria-label',open?'Fechar menu de navegação':'Abrir menu de navegação');toggle.querySelector('[aria-hidden]').textContent=open?'✕':'☰';}
+ toggle.addEventListener('click',()=>setOpen(toggle.getAttribute('aria-expanded')!=='true'));
+ nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>setOpen(false)));
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&toggle.getAttribute('aria-expanded')==='true'){setOpen(false);toggle.focus()}});
+ document.addEventListener('click',e=>{if(!e.target.closest('.site-header')&&toggle.getAttribute('aria-expanded')==='true')setOpen(false)});
+ window.addEventListener('resize',()=>{if(window.innerWidth>850)setOpen(false)});
+})();
+</script></body></html>
