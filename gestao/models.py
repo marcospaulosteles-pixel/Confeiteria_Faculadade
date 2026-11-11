@@ -20,6 +20,7 @@ class Ingrediente(models.Model):
 
 class Produto(models.Model):
     TIPOS=[('doce','Doce'),('kit','Combo / kit')]
+    CATEGORIAS=[('brigadeiros','Brigadeiros'),('especiais','Doces especiais'),('brownies','Brownies'),('bolos','Bolos'),('kits','Kits e combos')]
     FORMAS_VENDA=[('unidade','Por unidade'),('cento','Por cento (100 unidades)')]
     nome=models.CharField(max_length=120)
     descricao=models.TextField(blank=True)
@@ -28,6 +29,7 @@ class Produto(models.Model):
     quantidade_minima=models.PositiveIntegerField(default=1,help_text='Quantidade mínima de doces aceita no pedido.')
     ativo=models.BooleanField(default=True)
     tipo=models.CharField(max_length=12,choices=TIPOS,default='doce')
+    categoria=models.CharField(max_length=16,choices=CATEGORIAS,default='especiais',help_text='Aba do cardápio público em que este produto será exibido.')
     imagem_url=models.URLField('URL da imagem', max_length=500, blank=True, help_text='Opcional. Prefira imagem local para não depender de sites externos.')
     imagem_local=models.CharField(max_length=255,blank=True,help_text='Caminho dentro de gestao/static/, ex.: gestao/img/produtos/brigadeiro.jpg')
     ingredientes=models.ManyToManyField(Ingrediente,through='Receita',blank=True)
